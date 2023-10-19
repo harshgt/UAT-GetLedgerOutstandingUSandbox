@@ -1,0 +1,8 @@
+/* Add space between the icon and text */
+.icon-margin {
+    margin-right: 5px; /* Adjust the margin as needed */
+}
+
+.text-margin {
+    margin-left: 5px; /* Adjust the margin as needed */
+}

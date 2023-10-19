@@ -21,13 +21,21 @@ export default class ErrorMessageForTheOpportunity extends LightningElement {
     }
 
     handleButtonClick() {
+<<<<<<< HEAD
+=======
+        // Add your button click logic here
+        // This method will be executed when the "View Error" button is clicked
+>>>>>>> 0f5269c787d9c70df085e4bfb6d079e6cbc47ca1
         const event = new ShowToastEvent({
             title: 'Error',
             message:  this.opportunityError_Response__c,
             variant: 'error',
         });
         this.dispatchEvent(event);
+<<<<<<< HEAD
         
 
+=======
+>>>>>>> 0f5269c787d9c70df085e4bfb6d079e6cbc47ca1
     }
 }

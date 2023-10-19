@@ -1,65 +1,94 @@
 public with sharing class customerLedgerData {
     @AuraEnabled
-    public static map<String,Object> customerLedgerData(String endPointUrl, Date startDate, Date endDate) {
+    public static map<String,Object> customerLedgerData(Date startDate, Date endDate, String AccountSapId, String CompanyCode) {
         Map<String, Object> mapJsonData = new Map<String, Object>();
-        System.debug('endPointUrl ==> ' +endPointUrl);
-        System.debug('startDate ==> ' +startDate);
-        System.debug('endDate ==> ' +endDate);
         String strResponse=null;
-
-        //convert date to string 
-        String formattedDate = String.valueOf(startDate.day()) + '-' + (startDate.month() < 10 ? '0' : '') + String.valueOf(startDate.month()) + '-' + String.valueOf(startDate.year());
-        System.debug(formattedDate);
-
-
-
-       
-        if (String.isNotBlank(endPointUrl)) {
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(endPointUrl);
-            req.setMethod('POST'); // Change the method to POST for sending data
         
+        //System.debug('startDate ==> ' +startDate);
+        //System.debug('endDate ==> ' +endDate);
+        
+        //convert date to string 
+        String formattedStartDate = String.valueOf(startDate.year()) + '-' + (startDate.month() < 10 ? '0' : '') + String.valueOf(startDate.month()) + '-' + String.valueOf(startDate.day());
+        String formattedEndDate = String.valueOf(endDate.year()) + '-' + (endDate.month() < 10 ? '0' : '') + String.valueOf(endDate.month()) + '-' + String.valueOf(endDate.day());
+        System.debug('StartDate => ' +formattedStartDate);
+        System.debug('EndDate => ' +formattedEndDate);
+        System.debug('AccountSapId ==> ' +AccountSapId);
+        System.debug('CompanyCode ==> ' +CompanyCode);
+        
+        
+        strResponse = getCustomerLedgerSAP(formattedStartDate, formattedEndDate, AccountSapId, CompanyCode);
+        System.debug('strResponse => '+strResponse);
+            if(String.isNotBlank(strResponse))
+            {
+                mapJsonData = (map<String,Object>)JSON.deserializeUntyped(strResponse);
+                System.debug('mapJsonData => '+mapJsonData);
+               
+            }
+        
+        
+            //String jsonData = JSON.serialize(mapJsonData);
+
+           // return jsonData;
+        return mapJsonData;
+    }
+    
+    public static String getCustomerLedgerSAP(String formattedStartDate, String formattedEndDate, String AccountSapId, String CompanyCode){
+        
+        try {
+            Http http = new Http();
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint('https://brilliant-polymers-ixuv1tbr.it-cpi011-rt.cfapps.jp20.hana.ondemand.com/http/GETCUSTOMERLEGER');
+            req.setMethod('GET');
             String username = 'harshal.thakare@sapours.net.in';
             String password = '@Shyam004';
             Blob headerValue = Blob.valueOf(username + ':' + password);
-            String authorizationHeader = 'BASIC ' + EncodingUtil.base64Encode(headerValue);
-            System.debug(authorizationHeader);
+            String authorizationHeader = 'Basic ' + EncodingUtil.base64Encode(headerValue);
+            req.setHeader('authorization', authorizationHeader);
             
-            req.setHeader('Authorization', authorizationHeader);
-            req.setHeader('Content-Type', 'application/json');
-
-            req.setHeader('Accept', 'application/json');
-            req.setHeader('User-Agent', 'MySalesforceIntegration');
-            req.setHeader('X-CSRF-Token', 'uVkdu9B6J4TRY2VhrDDTxQ==');
-            //req.setHeader('Authorization', 'OAuth '+UserInfo.getSessionId());
-            //req.setHeader('Authorization', 'Bearer '+UserInfo.getSessionId());
+            Dom.Document doc = new Dom.Document();
+            Dom.XmlNode root = doc.createRootElement('CustomerLedger', null, null);
+            // Create A_BusinessPartnerType element
+            Dom.XmlNode IDroot = root.addChildElement('Company_Code__c', null, null).addTextnode(CompanyCode);
             
-            // Construct the JSON payload
-            String requestBody = '{"FirstName": "AkhilTest2121","MiddleName": "P22121","LastName": "Gaikwad221212","OrganizationBPName1": "AkhilTestmailmobile21212","BusinessPartnerCategory": "2"}';
-            req.setBody(requestBody);
-
-            // Adding cookies
-            String cookieValue = UserInfo.getSessionId();
-            req.setHeader('Cookie', cookieValue);
-
+            Dom.XmlNode IDroot1 = root.addChildElement('Customer', null, null).addTextnode(AccountSapId);
+            Dom.XmlNode IDroot2 = root.addChildElement('FromDate', null, null).addTextnode(formattedStartDate);
+            Dom.XmlNode IDroot3 = root.addChildElement('ToDate', null, null).addTextnode(formattedEndDate);
             
-            try {
-                Http hp = new Http();
-                HttpResponse res = hp.send(req);
-                System.debug('run1'+res);
+            String XmlBody = doc.toXmlString();
+            System.debug(XmlBody);
+            
+            //Adding Body to request
+            req.setBody(XmlBody);
+            
+            HttpResponse res = http.send(req);
+            System.debug('Response Body '+res);
+            System.debug('Response Body '+res.getBody());
+            
+            if(res.getStatusCode() == 200){
+                //System.debug('Response Code '+res.getStatusCode());
+                System.debug('Response Body '+res.getBody()); //res.getBody()
                 
-                if (res.getStatusCode() == 201) {
-                    System.debug('getStatusCode => ' + res.getStatusCode());
-                    System.debug('res.getBody => ' + res.getBody());
-                    strResponse = res.getBody();
-                } else {
-                    throw new CalloutException(res.getBody());
-                }
-            } catch (Exception e) {
-                throw e;
+            }else{
+                System.debug('Response Code '+res.getStatusCode());
+                //System.debug('Response Body '+res.getBody());
             }
+            
+            return res.getBody();
+            
+            
+            
+            
+        } catch (Exception e) {
+            system.debug(e.getMessage());
+            return null;
         }
         
-        return mapJsonData;
+        
     }
+    
+    
+    
+    
+    
+    
 }
