@@ -1,0 +1,9 @@
+<template>
+    <div>
+        <template if:true={opportunityError_Response__c}>
+            <template if:true={showButton}>
+                <lightning-button label="View Error" onclick={handleButtonClick}></lightning-button>
+            </template>
+        </template>
+    </div>
+</template>
