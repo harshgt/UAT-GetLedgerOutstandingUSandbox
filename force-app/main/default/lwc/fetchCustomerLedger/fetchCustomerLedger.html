@@ -1,50 +1,166 @@
 <template>
-    <p>Hello test</p>
     <!-- data related to ledger -->
     <lightning-card>
         <h2>
             <lightning-icon icon-name="utility:contact" size="small"></lightning-icon>
             <strong> Ledger Data</strong>
         </h2>
-                
-            <div class="slds-grid slds-gutters">
-                <div class="slds-col">
-                    <!-- <label for="startDate">Start Date:</label> -->
-                    <lightning-input type="date" name="startDate" label="Start Date:" value={startDate} max={endDate} onchange={handleStartDateChangeLedger} required></lightning-input>
-                </div>
-                <div class="slds-col">
-                    <!-- <label for="endDate">End Date:</label> -->
-                    <lightning-input type="date" name="endDate" label="End Date:" value={endDate} min={startDate} onchange={handleStartDateChangeLedger} required></lightning-input>
-                </div>
-            </div>    
+        
+        <div class="slds-grid slds-gutters">
+            <div class="slds-col">
+                <!-- <label for="startDate">Start Date:</label> -->
+                <lightning-input type="date" name="startDate" label="Start Date:" value={startDate} max={endDate} onchange={handleStartDateChangeLedger} required></lightning-input>
+            </div>
+            <div class="slds-col">
+                <!-- <label for="endDate">End Date:</label> -->
+                <lightning-input type="date" name="endDate" label="End Date:" value={endDate} min={startDate} onchange={handleStartDateChangeLedger} required></lightning-input>
+            </div>
+        </div>    
         <br/>
         <lightning-button variant="brand" label="View Customer Ledger" icon-name="utility:arrow_bottom" title="Primary action" onclick={ledgerFetchHandler} disabled={isButtonDisabled} class="slds-var-m-left_x-small"></lightning-button>
     </lightning-card>
-        
+    
+    
+    
+    
+    <!-- Customer Ledger Showing Data in Modal/PopUp -->
+    <template if:true={isShowModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open slds-modal_large">
+            <div class="slds-modal__container">
+                <!-- modal header start -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={hideModalBox}>
+                        <lightning-icon icon-name="utility:close"
+                        alternative-text="close"
+                        variant="inverse"
+                        size="small" ></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
 
-     <!-- data related to Outstanding -->
-    <lightning-card>
-        <h2>
-            <lightning-icon icon-name="utility:kanban" size="small"></lightning-icon>
-            <strong> Outstanding Data</strong>
-        </h2>
+                    <template if:false={isLoading}>
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">SHOW RECORD</h2>
+                
+                    </template>
+                    </header>
+                
+                <!-- modal body start -->
+                <div class="slds-modal__content" id="modal-content-id-1">
+                      
+                    <!-- record for the account  -->
+                    
+                    <div class="slds-m-around_medium">  
+                         
+                        <template if:true={isLoading}>
+                            <div  class="slds-m-around_medium">
+                                <lightning-spinner
+                                    alternative-text="Loading"
+                                    variant="brand"
+                                ></lightning-spinner>
+                                
+                            </div>
+                        </template>
+                        <template if:false={isLoading}>
+                            <template if:false={showNoRecordsMessage}>
+                                <div>
+                                    <lightning-datatable
+                                    key-field="id"
+                                    data={data}
+                                    columns={columns}
+                                    onrowselection={getSelectedRow}
+                                    hide-checkbox-column="true">
+                                    </lightning-datatable>
+                                </div>
 
-        <div class="slds-grid slds-gutters">
-            <div class="slds-col">
-               <lightning-input type="date" label="Select Date" value={currentDate} onchange={handleDefaultDateOutstanding} required disabled></lightning-input>
+                            </template>
+                            <template if:true={showNoRecordsMessage}>
+                                <div class="slds-align_absolute-center">
+                                    <p><strong>No Records Found!!!</strong></p>
+                                </div>
+
+                            </template>
+                            
+                        </template>
+                            
+                </div>    
+            </div>
             
-                <lightning-radio-group name="Type"
-                            label="Type"
-                            options={options}
-                            value={selectedTypeValue}
-                            onchange={selectedTypeValueHandler}
-                            required
-                            type="radio">
-                </lightning-radio-group>
-            </div>           
-        </div>
+            <!-- modal footer start-->
+            <footer class="slds-modal__footer">
+                
+                <!-- <lightning-button  variant="brand" label="Send Email" title="Primary action" class="slds-button slds-button_brand" onclick={sendEmail}></lightning-button>
+                -->
+                
+               <!--  <button class="slds-button slds-button_brand"  onclick={exportContactData}>Export Excel </button>
+                <button class="slds-button slds-button_brand" onclick={generatePdf}>Export PDF </button>
+                <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                --> 
 
-        <br/>
-        <lightning-button variant="brand" label="View Outstanding" icon-name="utility:arrow_bottom" title="Primary action" onclick={handleClickForOutStanding} class="slds-var-m-left_x-small" disabled={isButtonDisabledForOutstd}></lightning-button>
-    </lightning-card>
+                <button class="slds-button slds-button_brand" onclick={exportContactData} disabled={showNoRecordsMessage}> 
+                    <lightning-icon icon-name="utility:download" size="x-small" alternative-text="Export Excel"></lightning-icon>
+                    <span class="text-margin">Export Excel</span>
+                </button>
+                <button class="slds-button slds-button_brand" onclick={generatePdf} disabled={showNoRecordsMessage}>
+                    <lightning-icon icon-name="utility:download" size="x-small" alternative-text="Export PDF"></lightning-icon>
+                    Export PDF
+                </button>
+                <button class="slds-button slds-button_neutral" onclick={hideModalBox}>
+                    <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Cancel"></lightning-icon>
+                    Cancel
+                </button>
+            </footer>
+            
+        </div>
+    </section>
+</template>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- data related to Outstanding -->
+<lightning-card>
+    <h2>
+        <lightning-icon icon-name="utility:kanban" size="small"></lightning-icon>
+        <strong> Outstanding Data</strong>
+    </h2>
+    
+    <div class="slds-grid slds-gutters">
+        <div class="slds-col">
+            <lightning-input type="date" label="Select Date" value={currentDate} onchange={handleDefaultDateOutstanding} required disabled></lightning-input>
+            
+            <lightning-radio-group name="Type"
+            label="Type"
+            options={options}
+            value={selectedTypeValue}
+            onchange={selectedTypeValueHandler}
+            required
+            type="radio">
+        </lightning-radio-group>
+    </div>           
+</div>
+
+<br/>
+<lightning-button variant="brand" label="View Outstanding" icon-name="utility:arrow_bottom" title="Primary action" onclick={handleClickForOutStanding} class="slds-var-m-left_x-small" disabled={isButtonDisabledForOutstd}></lightning-button>
+</lightning-card>
 </template>
