@@ -20,16 +20,16 @@ public with sharing class customerLedgerData {
         System.debug('strResponse => '+strResponse);
             if(String.isNotBlank(strResponse))
             {
+                //System.debug('strResponse => '+strResponse);
                 mapJsonData = (map<String,Object>)JSON.deserializeUntyped(strResponse);
-                System.debug('mapJsonData => '+mapJsonData);
-               
+                //System.debug('mapJsonData => '+mapJsonData);
+                return mapJsonData;
             }
         
-        
-            //String jsonData = JSON.serialize(mapJsonData);
+           
 
-           // return jsonData;
-        return mapJsonData;
+            return null;
+        
     }
     
     public static String getCustomerLedgerSAP(String formattedStartDate, String formattedEndDate, String AccountSapId, String CompanyCode){
@@ -61,16 +61,14 @@ public with sharing class customerLedgerData {
             req.setBody(XmlBody);
             
             HttpResponse res = http.send(req);
-            System.debug('Response Body '+res);
+            //System.debug('Response Body '+res);
             System.debug('Response Body '+res.getBody());
-            
+            System.debug('Response Code '+res.getStatusCode());
             if(res.getStatusCode() == 200){
                 //System.debug('Response Code '+res.getStatusCode());
                 System.debug('Response Body '+res.getBody()); //res.getBody()
+                return res.getBody();
                 
-            }else{
-                System.debug('Response Code '+res.getStatusCode());
-                //System.debug('Response Body '+res.getBody());
             }
             
             return res.getBody();
@@ -80,7 +78,7 @@ public with sharing class customerLedgerData {
             
         } catch (Exception e) {
             system.debug(e.getMessage());
-            return null;
+            return e.getMessage();
         }
         
         

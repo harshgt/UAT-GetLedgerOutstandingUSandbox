@@ -5,6 +5,7 @@ import getCustomerOutStandingData from '@salesforce/apex/customerOutStandingData
 import JSPDF from '@salesforce/resourceUrl/jspdf';
 import {loadScript} from "lightning/platformResourceLoader";
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import sendEmail from '@salesforce/apex/SendEmailController.sendEmail';
 
 
 // Define fields to fetch
@@ -31,6 +32,24 @@ const columns = [
 
 export default class FetchCustomerLedger extends LightningElement {
 
+    @track emailList = [];
+    @track emailCCList = [];
+
+    handleToAddress(event) {
+        const inputString = event.target.value;
+        const emails = inputString.split(',').map(email => email.trim());
+        this.emailList = emails;
+    }
+
+    handleCCAddress(event) {
+        const inputCCString = event.target.value;
+        const CCemails = inputCCString.split(',').map(email => email.trim());
+        this.emailCCList = CCemails;
+    }
+
+
+
+    pdfBase64;
     columns = columns;
     //data=[];
     data = [];
@@ -76,6 +95,14 @@ export default class FetchCustomerLedger extends LightningElement {
         this.isLoading = true;
 
     }
+
+    @track isShowModal1  = false;
+    hideModalBox1() {  
+        this.isShowModal1 = false;
+       
+
+    }
+
 
     //use for outStanding radio button optios
     get options() {
@@ -184,6 +211,14 @@ export default class FetchCustomerLedger extends LightningElement {
                     
                     // Check if data is empty and show "Record Not Found" message
                     this.showNoRecordsMessage = this.data.length === 0;
+                }
+                else if(data.status !== 200){
+                    //this.data = [];
+                    //console.log("op1 "+JSON.stringify(data));
+                    //console.log("op2 "+JSON.stringify(data[0]));
+                    //console.log("op3 "+JSON.stringify(data.body.message));
+                    
+                    this.showNoRecordsMessage = true;
                 } else {
                     
                     this.data = [];
@@ -195,7 +230,10 @@ export default class FetchCustomerLedger extends LightningElement {
                 
             })
             .catch(error => {
-                console.log(JSON.stringify(error));
+                console.log("hrllo"+JSON.stringify(error));
+                this.isLoading = true;
+                this.showToast('Error '+ error.status, error.body.message , 'error');
+                this.isShowModal = false;
             }); 
         }
         else{
@@ -273,7 +311,7 @@ export default class FetchCustomerLedger extends LightningElement {
 			loadScript(this, JSPDF)
 		]);
 	}
-
+    
 	generatePdf(){
     console.log('its working');
     //console.log(this.data);
@@ -301,12 +339,64 @@ export default class FetchCustomerLedger extends LightningElement {
 
     // Adjusted table position
     doc.table(40, 100, this.data , this.headers, { autosize: true });
-		doc.save("Customer ledg.pdf");
+		//doc.save("Customer ledg.pdf");
+
+        const pdfData = this.formatDataForPdf(this.data); //generate PDF 
+        console.log(this.pdfData);
+
+        // Add the table to the PDF
+    doc.autoTable({
+        startY: 100,
+        head: [this.headers], // Table headers
+        body: pdfData,        // Table data
+        autoSize: true       // Automatically adjust column widths
+    });
+
+    console.log('pdfData:', pdfData);
+    this.pdfBase64 = doc.output('datauristring');
+    console.log(this.pdfBase64);
+    //sendEmailWithAttachment(pdfBase64);
+
 	}
 
 
-    
+    sendEmailData(){
+        this.isShowModal1 = true;
+        this.generatePdf();
+    }
+     
+    sendEmailData1(){
        
+       
+       sendEmail({ toAddress: this.emailList, toCCAddress : this.emailCCList, toAttachment : this.pdfBase64}) 
+            .then((data) => {
+                // Show success toast notification
+                if(data === 'true')
+                {
+                    this.showToast('Success', 'Email sent successfully', 'success');
+                    this.clearFields();
+                }  
+                else
+                {
+                    this.showToast('Error', data, 'error');
+                    this.clearFields();
+                }  
+            }).catch(error =>{
+                //this.showToast('Error', error, 'error');
+            })
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
