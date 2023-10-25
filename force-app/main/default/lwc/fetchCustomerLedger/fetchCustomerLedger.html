@@ -181,47 +181,4 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- data related to Outstanding -->
-<lightning-card>
-    <h2>
-        <lightning-icon icon-name="utility:kanban" size="small"></lightning-icon>
-        <strong> Outstanding Data</strong>
-    </h2>
-    
-    <div class="slds-grid slds-gutters">
-        <div class="slds-col">
-            <lightning-input type="date" label="Select Date" value={currentDate} onchange={handleDefaultDateOutstanding} required disabled></lightning-input>
-            
-            <lightning-radio-group name="Type"
-            label="Type"
-            options={options}
-            value={selectedTypeValue}
-            onchange={selectedTypeValueHandler}
-            required
-            type="radio">
-        </lightning-radio-group>
-    </div>           
-</div>
-
-<br/>
-<lightning-button variant="brand" label="View Outstanding" icon-name="utility:arrow_bottom" title="Primary action" onclick={handleClickForOutStanding} class="slds-var-m-left_x-small" disabled={isButtonDisabledForOutstd}></lightning-button>
-</lightning-card>
 </template>
