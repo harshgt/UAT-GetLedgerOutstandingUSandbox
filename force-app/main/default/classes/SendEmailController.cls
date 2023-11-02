@@ -1,52 +1,75 @@
-public with sharing class SendEmailController {
-    @AuraEnabled
-    public static String sendEmail(List<String> toAddress,List<String> toCCAddress, String toAttachment) { 
-        // Create a new SingleEmailMessage object
-        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-        //system.debug(replyTos);
-        //system.debug(senderNames);  
+public with sharing class SendEmailController { 
+    
+    //public static String sendEmail(List<String> toAddress,List<String> toCCAddress, String toAttachment) { 
+        @AuraEnabled    
+        public static String sendEmail(List<String> toAddress,List<String> toCCAddress,String BodyEmail, String toAttachment, String CurrentUser, String CurrentUserNa){ //String recipientEmail, String emailSubject
+            List<Object> attachmentList = (List<Object>) JSON.deserializeUntyped(toAttachment);
+            ///system.debug('senderEmail is '+replyEmail);
+            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
 
-        // Set the recipient's email address
-        mail.setReplyTo('harshgthakare@gmail.com'); // change it with your mail address.
-        mail.setSenderDisplayName('salesforce test User'); 
-        
-        system.debug(toAddress);
-       // Create an email attachment
-        Messaging.EmailFileAttachment attachment = new Messaging.EmailFileAttachment();
-        attachment.setFileName('demo.pdf'); // Set the attachment file name
-        attachment.setBody(EncodingUtil.base64Decode(toAttachment)); // Convert base64 to Blob
+            // Get the email address of the currently logged in user
+             /* User currentUser = [SELECT Email,Name, Username FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+            String senderEmail = currentUser.Email;
+            String SenderDisplayName = currentUser.Name;
+            //system.debug('senderEmail is '+senderEmail);  */
 
-        // Add the attachment to the email
-        mail.setFileAttachments(new List<Messaging.EmailFileAttachment>{attachment});   
-        
-          
-        mail.setToAddresses(toAddress );
+            mail.setReplyTo(CurrentUserNa);
 
-        if(toCCAddress != NULL && toCCAddress.isEmpty()){
-             mail.setccAddresses(toCCAddress);
+            //system.debug('senderEmail is '+replyEmail);
+
+            //mail.setReplyTo('harshal.thakare@sapours.net.in.brilliant.briuat');
+            mail.setSenderDisplayName(CurrentUser);
+            
+            mail.setToAddresses(toAddress);
+            
+            if (toCCAddress != null && !toCCAddress.isEmpty()) {
+                mail.setCcAddresses(toCCAddress);
+            }
+            
+            List<Messaging.EmailFileAttachment> emailAttachments = new List<Messaging.EmailFileAttachment>();
+            
+            for (Object attachmentData : attachmentList) {
+                Map<String, Object> attachmentMap = (Map<String, Object>)attachmentData;
+                String fileName = String.valueOf(attachmentMap.get('name'));
+                String contentVersionId = String.valueOf(attachmentMap.get('contentVersionId'));
+                String mimeType = String.valueOf(attachmentMap.get('mimeType'));
+                
+                // Fetch the attachment content based on contentVersionId
+                Blob attachmentContent = YourAttachmentRetrievalMethod(contentVersionId);
+                
+                if (attachmentContent != null) {
+                    // Create EmailFileAttachment
+                    Messaging.EmailFileAttachment attachment = new Messaging.EmailFileAttachment();
+                    attachment.setFileName(fileName);
+                    attachment.setBody(attachmentContent);
+                    attachment.setContentType(mimeType);
+                    emailAttachments.add(attachment);
+                }
+            }
+            
+            mail.setFileAttachments(emailAttachments);
+            mail.setSubject('Showing Ledger data...! ');
+            mail.setHtmlBody('Hello, </br></br>' + BodyEmail + ' <p>thank You!<br>Harshal Thakare</p>');
+            mail.setSaveAsActivity(true);
+            
+            try {
+                Messaging.SendEmailResult[] results = Messaging.sendEmail(new List<Messaging.Email> { mail });
+                return 'true';
+            } catch (EmailException e) {
+                return e.getMessage();
+            }
         }
-       
-
-        // Set the email subject
-        mail.setSubject('Showing Outstanding data...! for Contact <strong> HARSHAL </strong>');
-       mail.setHtmlBody(' <p>thank You!<br>SHYAM GT 10 </p>');
-     
-         //mail.setTemplateId('00X5j0000032nsNEAQ');
-        mail.setSaveAsActivity(true);
-
-
-        // Send the email using the Messaging.sendEmail method
-        try {
-            Messaging.SendEmailResult[] results = Messaging.sendEmail(new List<Messaging.Email> { mail });
-              
-             system.debug(results);
-             return 'true';
-        } catch (EmailException e) {
-            system.debug('EmailException: ' + e.getMessage());
-            //system.debug('EmailException: ' + e.);
-            return e.getMessage(); // Email sending failed
+        
+        // Implement a method to retrieve attachment content based on contentVersionId
+        public static Blob YourAttachmentRetrievalMethod(String contentVersionId) {
+            ContentVersion contentVersion = [SELECT VersionData FROM ContentVersion WHERE Id = :contentVersionId LIMIT 1];
+            
+            if (contentVersion != null && contentVersion.VersionData != null) {
+                // Retrieve and return the content data as a Blob
+                return contentVersion.VersionData;
+            } else {
+                // Return null if the content cannot be retrieved
+                return null;
+            }
         }
-
-
     }
-}
