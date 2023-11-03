@@ -383,18 +383,13 @@ export default class FetchOutstanding extends LightningElement {
         this.CurrentUserName = currentUserName; 
         this.CurrentUserEmail = currentUserEmail
 
-        console.log('CurrentUserNam e'+ this.CurrentUserName);
+        /* console.log('CurrentUserNam e'+ this.CurrentUserName);
         console.log('CurrentUserEmail e'+ this.CurrentUserEmail);
         console.log('its working'+this.CurrentUserEmail);
-        console.log('Attachemntskdjf '+JSON.stringify(this.attachmentData));
+        console.log('Attachemntskdjf '+JSON.stringify(this.attachmentData)); */
 
         const attachm = JSON.stringify(this.attachmentData);
-            /* reader.onload = () => {
-                let attachmentContent = reader.result.split(',')[1]; // Extract base64 content */
-                /* const replyEmail = this.user.data.fields.Email.value;
-                const replyName = this.user.data.fields.Name.value;
-                console.log('its working replyEmail '+replyEmail);
-                console.log('its working replyName '+replyName); */
+            
 
                 sendEmailWithPDF({toAddress: this.emailList, toCCAddress : this.emailCCList, BodyEmail : this.getEma, toAttachment : attachm, CurrentUser : this.CurrentUserName, CurrentUserNa : this.CurrentUserEmail})
                 .then((data) => {
@@ -421,8 +416,7 @@ export default class FetchOutstanding extends LightningElement {
     }
 
     clearFields(){
-        //this.emailList = null;
-        //this.emailCCList = null; 
+        
         this.isShowModal1 = false;
         this.uploadedFileNames = null;
         //this.attachm = null;
