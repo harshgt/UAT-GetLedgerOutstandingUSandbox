@@ -12,12 +12,8 @@ import USER_ID from '@salesforce/user/Id';
 import USER_NAME_FIELD from '@salesforce/schema/User.Name';
 import USER_EMAIL_FIELD from '@salesforce/schema/User.Email';
 
-
-
 // Define fields to fetch
 const FIELDS = ['Account.SAP_Code__c', 'Account.Company_Code__c', 'Account.Name'];
-
-
 
 const columns = [
     { label: 'Customer Number', fieldName: 'KUNNR' },
@@ -28,7 +24,7 @@ const columns = [
     { label: 'Debit Amount', fieldName: 'DEBIT' }, 
     { label: 'Credit Amount', fieldName: 'CREDIT' },
     { label: 'Closing Balance', fieldName: 'CLSBAL' },
-
+    
     /* { label: 'Customer Number', fieldName: 'IV_KUNNR' },
     { label: 'Document Date', fieldName: 'BLDAT' },
     { label: 'From date', fieldName: 'IV_FRM_DATE' },  
@@ -45,15 +41,15 @@ const columns = [
 
 
 export default class FetchCustomerLedger extends LightningElement {
-   
+    
     //for email 
     @track emailList = [];
     @track emailCCList = [];
     @track getEma;
-
+    
     columns = columns;
     data = [];
-
+    
     @track showNoRecordsMessage = false;
     isLoading = true;
     @api recordId;    
@@ -70,65 +66,53 @@ export default class FetchCustomerLedger extends LightningElement {
     @track isShowModal = false;
     @track isShowModal1  = false;
     jsPDFInitialized = false;
-
-
+    
+    
     connectedCallback() {
         this.loadStaticResource();
     }
-
+    
     handleToAddress(event) {
         const inputString = event.target.value;
-        const emails = inputString.split(',').map(email => email.trim());
+        const emails = inputString.split(/[, ]+/).map(email => email.trim());
         this.emailList = emails;
         
     }
-
-    
     
     handleCCAddress(event) {
         const inputCCString = event.target.value;
-        const CCemails = inputCCString.split(',').map(email => email.trim());
+        const CCemails = inputCCString.split(/[, ]+/).map(email => email.trim());
         this.emailCCList = CCemails;
     }
     
-
     handleRischText(event) {
         const inputrichText = event.target.value; 
         //const inputrichText1 = this.template.querySelector('lightning-input-rich-text').value;
         this.getEma = inputrichText;
     }
-
+    
     get acceptedFormats() {
         return ['.png','.xlsx', '.xls', '.csv', '.png', '.doc', '.docx', '.pdf'];
     }
-
+    
     handleUploadFinished(event) {
         // Get the list of uploaded files
         const uploadedFiles = event.detail.files;
         this.uploadedFileNames = uploadedFiles.map(file => file.name);
         this.attachmentData = uploadedFiles;
         //alert('No. of files uploaded : ' + uploadedFiles.length);
-    }
-
-    
-    
-    
+    } 
     
     hideModalBox() {  
         this.isShowModal = false;
         this.data = null;
-        this.isLoading = true;
-        
+        this.isLoading = true;     
     }
-    
     
     hideModalBox1() {  
-        this.isShowModal1 = false;
-        
-        
+        this.isShowModal1 = false;  
+        this.uploadedFileNames = [];   
     }
-    
-    
     
     
     //fetch data of Account using UIRecordAPI
@@ -137,19 +121,16 @@ export default class FetchCustomerLedger extends LightningElement {
         if (data) {
             this.AccountSapId = data.fields.SAP_Code__c.value;
             this.CompanyCode = data.fields.Company_Code__c.value;
-            this.AccountName = data.fields.Name.value;
-            
+            this.AccountName = data.fields.Name.value;     
         } else if (error) {
             console.error(error);
         }
     }
-
+    
     //fetch user data using UIRecordAPI
     @wire(getRecord, { recordId: USER_ID, fields: [USER_NAME_FIELD, USER_EMAIL_FIELD] })
     user;
     
-    
-
     async loadStaticResource() {
         try {
             const response = await fetch(MY_STATIC_RESOURCE);
@@ -165,11 +146,6 @@ export default class FetchCustomerLedger extends LightningElement {
         }
     }
     
-    
-    
-    
-   
-    
     handleStartDateChangeLedger(event)
     {
         if (event.target.name === 'startDate') {
@@ -180,43 +156,27 @@ export default class FetchCustomerLedger extends LightningElement {
         this.isButtonDisabled = !this.startDate || !this.endDate; 
     }
     
-    
-    
-    
-    
     //call Http class of ledger
     ledgerFetchHandler() {
         //window.alert(this.startDate + ' and\n ' + this.endDate);
-        this.isShowModal = true;
-        
+        this.isShowModal = true;  
         
         // check if any data is blank & show error message
         if(this.AccountSapId && this.CompanyCode){
             //call rest api
             //check the response 
             //display response 
-            
             //call apex class 
             getCustomerLedgerData({startDate : this.startDate, endDate : this.endDate, AccountSapId : this.AccountSapId, CompanyCode : this.CompanyCode   })
             .then(data => {
                 console.log(JSON.stringify(data));
-                //this.data = data.Cust_ledgerSet.Cust_ledger;
-                /*  if (data && data.Cust_ledgerSet && data.Cust_ledgerSet.Cust_ledger) {
-                    this.data = data.Cust_ledgerSet.Cust_ledger;
-                    this.showNoRecordsMessage = false;
-                } else {
-                    this.data = [];
-                    this.showNoRecordsMessage = true;
-                }
-                this.isLoading = false; */
-                // Handle the response data
                 if (data && data.Cust_ledgerSet) {
                     const ledgerData = data.Cust_ledgerSet.Cust_ledger;
                     
                     if (Array.isArray(ledgerData)) {
                         // If ledgerData is already an array, use it directly
                         this.data = ledgerData;
-
+                        
                     } else if (ledgerData && typeof ledgerData === 'object') {
                         // If ledgerData is an object, convert it to an array
                         this.data = [ledgerData];
@@ -232,10 +192,7 @@ export default class FetchCustomerLedger extends LightningElement {
                     this.data = [];
                     this.showNoRecordsMessage = true;
                 }
-                
-                this.isLoading = false;
-                
-                
+                this.isLoading = false;  
             })
             .catch(error => {
                 console.log("hrllo"+JSON.stringify(error));
@@ -250,9 +207,7 @@ export default class FetchCustomerLedger extends LightningElement {
             this.isLoading = true;
             this.data = null;
             this.isShowModal = false;
-        }
-        
-        
+        }     
     }
     
     
@@ -266,10 +221,8 @@ export default class FetchCustomerLedger extends LightningElement {
         this.dispatchEvent(event);
     } 
     
-    
-    
     //Excel Generation
-    columnHeader = ['Customer Number','Posting Date','Document Number','Narration','Document Type','Debit Amount','Credit Amount','Closing Balance',/* 'Customer Number', */'Document Date','From date','Document Type Description','Reference Key','TCS Amount','Company Code','Company Address','To date','Profit Center' ]
+    columnHeader = ['Customer Number','Posting Date','Document Number','Narration','Document Type','Debit Amount','Credit Amount','Closing Balance',/* 'Customer Number', 'Document Date','From date','Document Type Description','Reference Key','TCS Amount','Company Code','Company Address','To date','Profit Center'*/ ]
     exportContactData(){
         // Prepare a html table
         let doc = '';
@@ -279,7 +232,7 @@ export default class FetchCustomerLedger extends LightningElement {
         doc += '<p>SAP Code : '+this.AccountSapId+ '</p>'; 
         doc += '<p>From Date : '+this.startDate+ '</p>';
         doc += '<p>To Date : '+this.endDate+ '</p>';
-
+        
         // Start the HTML table
         doc += '<table>';
         // Add styles for the table
@@ -306,7 +259,7 @@ export default class FetchCustomerLedger extends LightningElement {
             doc += '<th>'+record.DEBIT+'</th>'; 
             doc += '<th>'+record.CREDIT+'</th>';
             doc += '<th>'+record.CLSBAL+'</th>'; 
-            /* doc += '<th>'+record.IV_KUNNR+'</th>'; */ 
+            /* doc += '<th>'+record.IV_KUNNR+'</th>';  
             doc += '<th>'+record.BLDAT+'</th>';             
             doc += '<th>'+record.IV_FRM_DATE+'</th>'; 
             doc += '<th>'+record.LTEXT+'</th>'; 
@@ -314,7 +267,7 @@ export default class FetchCustomerLedger extends LightningElement {
             doc += '<th>'+record.KWERT+'</th>'; 
             doc += '<th>'+record.ZADDRESS+'</th>'; 
             doc += '<th>'+record.IV_FRM_TO+'</th>'; 
-            doc += '<th>'+record.IV_PRCTR+'</th>';
+            doc += '<th>'+record.IV_PRCTR+'</th>';*/
             doc += '<th></th>';
             doc += '</tr>';
         });
@@ -328,44 +281,42 @@ export default class FetchCustomerLedger extends LightningElement {
         document.body.appendChild(downloadElement);
         downloadElement.click();
     }
-
+    
     renderedCallback() {
         if (!this.jsPDFInitialized) {
             this.jsPDFInitialized = true;
             loadScript(this, JS_PDF)
-                .then(() => {
-                    console.log('jsPDF library loaded successfully');
-                    // Load jsPDF-AutoTable after jsPDF
-                    return loadScript(this, JS_PDF_AUTO_TABLE);
-                })
-                .then(() => {
-                    console.log('jsPDF-AutoTable library loaded successfully');
-                })
-                .catch((error) => {
-                    console.error('Error loading libraries', error);
-                });
+            .then(() => {
+                console.log('jsPDF library loaded successfully');
+                // Load jsPDF-AutoTable after jsPDF
+                return loadScript(this, JS_PDF_AUTO_TABLE);
+            })
+            .then(() => {
+                console.log('jsPDF-AutoTable library loaded successfully');
+            })
+            .catch((error) => {
+                console.error('Error loading libraries', error);
+            });
         }
     }
-
-
+    
     handleGeneratePDF() {
         if (this.jsPDFInitialized) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-    
+            
             // Center-align the title
             doc.setFontSize(18); // Adjust the font size as needed
             doc.text('Ledger Data', doc.internal.pageSize.getWidth() / 2, 10, 'center');
-                     
+            
             doc.setFontSize(12); // Adjust the font size as needed    
             doc.text('Account Name: ' + this.AccountName, 10, 20);
             doc.text('Account SAP Code: ' + this.AccountSapId, 10, 30);
             doc.text('Start Date: ' + this.startDate, 10, 40);
             doc.text('End Date: ' + this.endDate, 10, 50);
-    
+            
             // Convert the JSON string back to an array of objects
             const ledgerData = this.data;//JSON.parse(this.data);
-            
             
             const data = [];
             data.push(['Customer Number','Posting Date','Document Number','Narration','Document Type','Debit Amount','Credit Amount','Closing Balance']);
@@ -373,71 +324,68 @@ export default class FetchCustomerLedger extends LightningElement {
             ledgerData.forEach(ledData => {
                 data.push([ledData.KUNNR, ledData.BUDAT, ledData.BELNR, ledData.SGTXT, ledData.BLART, ledData.DEBIT, ledData.CREDIT, ledData.CLSBAL]);
             });
-    
-            // Add the table to the PDF using jsPDF-AutoTable
-             doc.autoTable({
+            const tableOptions = {
                 head: [data[0]],
                 body: data.slice(1),
                 startY: 70,
-            }); 
-    
+                styles: {
+                    fontSize: 6, // Set the font size for the table
+                },
+            };
+            doc.autoTable(tableOptions);
+            // Add the table to the PDF using jsPDF-AutoTable
+            /* doc.autoTable({
+                head: [data[0]],
+                body: data.slice(1),
+                startY: 70,
+            }); */ 
+            
             doc.save('ledger_Data.pdf');
         } else {
             console.error('jsPDF library not initialized');
         }
     }
-
-
-
-
-
-    
     
     showDataForEmail(){
         this.isShowModal1 = true;
     }
-
     
     sendEmailData1() {
         const currentUserName = this.user.data.fields.Name.value;
         const currentUserEmail = this.user.data.fields.Email.value;
         this.CurrentUserName = currentUserName;
         this.CurrentUserEmail = currentUserEmail
-
+        
         /* console.log('CurrentUserNam e'+ this.CurrentUserName);
         console.log('CurrentUserEmail e'+ this.CurrentUserEmail);
         console.log('its working'+this.CurrentUserEmail);
         console.log('Attachemntskdjf '+JSON.stringify(this.attachmentData)); */
-
+        
         const attachm = JSON.stringify(this.attachmentData);
-            sendEmailWithPDF({toAddress: this.emailList, toCCAddress : this.emailCCList,BodyEmail : this.getEma, toAttachment : attachm, CurrentUser : this.CurrentUserName, CurrentUserNa : this.CurrentUserEmail})
-                .then((data) => {
-                    // Show success toast notification
-                    if(data === 'true')
-                    {
-                        console.log(data);
-                        this.showToast('Success', 'Email sent successfully', 'success');
-                        this.clearFields();
-                    }  
-                    else
-                    {
-                        this.showToast('Error', data, 'error');
-                         this.clearFields();
-                    }  
-                }).catch(error =>{
-                    //this.showToast('Error', error, 'error');
-                })
-            
+        sendEmailWithPDF({toAddress: this.emailList, toCCAddress : this.emailCCList, BodyEmail : this.getEma, toAttachment : attachm, CurrentUser : this.CurrentUserName, CurrentUserNa : this.CurrentUserEmail})
+        .then((data) => {
+            // Show success toast notification
+            if(data === 'true')
+            {
+                console.log(data);
+                this.showToast('Success', 'Email sent successfully', 'success');
+                this.clearFields();
+            }  
+            else
+            {
+                this.showToast('Error', data, 'error');
+                //this.clearFields();
+            }  
+        }).catch(error =>{
+            //this.showToast('Error', error, 'error');
+        })
+        
     }
-
+    
     clearFields(){
         
         this.isShowModal1 = false;
         this.uploadedFileNames = null;
         
-    }
-      
-   
-    
-    
+    }  
 }
