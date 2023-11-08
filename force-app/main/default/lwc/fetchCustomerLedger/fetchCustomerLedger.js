@@ -268,7 +268,6 @@ export default class FetchCustomerLedger extends LightningElement {
             doc += '<th>'+record.ZADDRESS+'</th>'; 
             doc += '<th>'+record.IV_FRM_TO+'</th>'; 
             doc += '<th>'+record.IV_PRCTR+'</th>';*/
-            doc += '<th></th>';
             doc += '</tr>';
         });
         doc += '</table>';

@@ -15,44 +15,27 @@ import USER_EMAIL_FIELD from '@salesforce/schema/User.Email';
 // Define fields to fetch
 const FIELDS = ['Account.SAP_Code__c', 'Account.Company_Code__c', 'Account.Name'];
 
+
 const columns = [
-    /* { label: 'IV_NOTDUE', fieldName: 'IV_NOTDUE' },
-    { label: 'Xblnr', fieldName: 'Xblnr' }, 
-    { label: 'InvAmt', fieldName: 'InvAmt' },
-    { label: 'RemAmt', fieldName: 'RemAmt' },
-    { label: 'IV_KUNNR', fieldName: 'IV_KUNNR' },
-    { label: 'Ageing', fieldName: 'Ageing' },
-    { label: 'Blart', fieldName: 'Blart' },
-    { label: 'RemAmtDC', fieldName: 'RemAmtDC' },
-    { label: 'InvAmtDc', fieldName: 'InvAmtDc' },
-    { label: 'CustName', fieldName: 'CustName' },
-    { label: 'IV_OVERDUE', fieldName: 'IV_OVERDUE' },
-    { label: 'OutDays', fieldName: 'OutDays' },
-    { label: 'IV_BUKRS', fieldName: 'IV_BUKRS' },
-    { label: 'Bldat', fieldName: 'Bldat' },
-    { label: 'PayTerms', fieldName: 'PayTerms' },
-    { label: 'Belnr', fieldName: 'Belnr' },
-    { label: 'CreditP', fieldName: 'CreditP' }, */
     
-    
-    /* { label: 'Not Due', fieldName: 'IV_NOTDUE' }, */
-    /* { label: 'Reference', fieldName: 'Xblnr' }, */
-    { label: 'Customer code', fieldName: 'IV_KUNNR' },    
-    /* { label: 'INV_AMT', fieldName: 'InvAmt' }, */
-    { label: 'REM_AMT_LC', fieldName: 'RemAmt' }, 
-    { label: 'Ageing', fieldName: 'Ageing' },
-    { label: 'Document Type', fieldName: 'Blart' },
-    { label: 'REM_AMT_DC', fieldName: 'RemAmtDC' },
-    /* { label: 'INV_AMT_DC', fieldName: 'InvAmtDc' }, */
-    { label: 'Name', fieldName: 'CustName' },
-    /* { label: 'OverDue', fieldName: 'IV_OVERDUE' }, */
-    { label: 'OUT_DAYS', fieldName: 'OutDays' },
-    /* { label: 'company code', fieldName: 'IV_BUKRS' },  */
+    { label: 'Customer Name', fieldName: 'CustName' },
+    { label: 'Document No.', fieldName: 'Belnr' },
     { label: 'Document Date', fieldName: 'Bldat' },
+    { label: 'Document Type', fieldName: 'Blart' },
+    { label: 'Reference Document No.', fieldName: 'Xblnr' }, 
+    { label: 'Credit Period', fieldName: 'CreditP' },
+    { label: 'Outstanding Days', fieldName: 'OutDays' },
+    { label: 'Aging', fieldName: 'Ageing' },
+    { label: 'Invoice Amount', fieldName: 'InvAmt' },
+    { label: 'Remaining Amount', fieldName: 'RemAmt' }, 
+
+    /* { label: 'Not Due', fieldName: 'IV_NOTDUE' }, */
+    /* { label: 'Customer code', fieldName: 'IV_KUNNR' },    
+    { label: 'REM_AMT_DC', fieldName: 'RemAmtDC' }, */
+    /* { label: 'INV_AMT_DC', fieldName: 'InvAmtDc' }, */
+    /* { label: 'OverDue', fieldName: 'IV_OVERDUE' }, */
+    /* { label: 'company code', fieldName: 'IV_BUKRS' },  */
     /*  { label: 'PayTerms', fieldName: 'PayTerms' }, */
-    { label: 'Document Number', fieldName: 'Belnr' },
-    { label: 'CreditP', fieldName: 'CreditP' },
-    
 ];
 
 export default class FetchOutstanding extends LightningElement {
@@ -241,9 +224,9 @@ export default class FetchOutstanding extends LightningElement {
         this.dispatchEvent(event);
     }
 
-
     
-    columnHeader = [/* 'Not Due',  */'Reference', 'INV_AMT', 'REM_AMT_LC','Customer code','Ageing','Document Type','REM_AMT_DC','INV_AMT_DC','Name',/* 'OverDue' ,*/'OUT_DAYS'/* ,'company code' */ ];
+    
+    columnHeader = ['Customer Name','Document No.','Document Date','Document Type','Reference Document No.','Credit Period','Outstanding Days','Aging','Invoice Amount','Remaining Amount'];
     exportContactData(){
         // Prepare a html table
         let doc = '';
@@ -269,21 +252,22 @@ export default class FetchOutstanding extends LightningElement {
             doc += '<th>'+ element +'</th>'           
         });
         doc += '</tr>';
+
         // Add the data rows
         this.data.forEach(record => {
             doc += '<tr>';
             /* doc += '<th>'+record.IV_NOTDUE+'</th>'; */
-            doc += '<th>'+record.Xblnr+'</th>';
-            doc += '<th>'+record.InvAmt+'</th>';
-            doc += '<th>'+record.RemAmt+'</th>';
-            doc += '<th>'+record.IV_KUNNR+'</th>';
-            doc += '<th>'+record.Ageing+'</th>';
+            doc += '<th>'+record.CustName+'</th>';
+            doc += '<th>'+record.Belnr+'</th>';
+            doc += '<th>'+record.Bldat+'</th>';
             doc += '<th>'+record.Blart+'</th>';
-            doc += '<th>'+record.RemAmtDC+'</th>';
-            doc += '<th>'+record.InvAmtDc+'</th>';
-            doc += '<th>'+record.CustName+'</th>'; 
-            /*  doc += '<th>'+record.IV_OVERDUE+'</th>'; */
+            doc += '<th>'+record.Xblnr+'</th>';
+            doc += '<th>'+record.CreditP+'</th>';
             doc += '<th>'+record.OutDays+'</th>';
+            doc += '<th>'+record.Ageing+'</th>';
+            doc += '<th>'+record.InvAmt+'</th>'; 
+            doc += '<th>'+record.RemAmt+'</th>'; 
+            /* doc += '<th>'+record.OutDays+'</th>'; */
             /*   doc += '<th>'+record.IV_BUKRS+'</th>';  */
             doc += '</tr>';
         });
@@ -340,11 +324,13 @@ export default class FetchOutstanding extends LightningElement {
             // Convert the JSON string back to an array of objects
             const outstandingData = this.data;//JSON.parse(this.data);
             
+            
+
             const data = [];
-            data.push(['Customer code', /* 'REM_AMT_LC', */ 'Ageing',/* 'Document Type', */'REM_AMT_DC','Name','OUT_DAYS','Document Date','Document Number','CreditP']);
+            data.push(['Customer Name','Document No.','Document Date','Document Type','Reference Document No.','Credit Period','Outstanding Days','Aging','Invoice Amount','Remaining Amount']);
             
             outstandingData.forEach(outData => {
-                data.push([outData.IV_KUNNR, /* outData.RemAmt, */ outData.Ageing, /* outData.Blart, */ outData.RemAmtDC, outData.CustName, outData.OutDays, outData.Bldat, outData.Belnr, outData.CreditP]);
+                data.push([outData.CustName, outData.Belnr,outData.Bldat,outData.Blart,outData.Xblnr,outData.CreditP,outData.OutDays,outData.Ageing,outData.InvAmt,outData.RemAmt]);
             });
             
             const tableOptions = {
@@ -398,7 +384,7 @@ export default class FetchOutstanding extends LightningElement {
             else
             {
                 this.showToast('Error', data, 'error');
-                this.clearFields();    
+                //this.clearFields();    
             }  
         }).catch(error =>{
             //this.showToast('Error', error, 'error');
