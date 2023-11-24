@@ -13,17 +13,26 @@ import USER_NAME_FIELD from '@salesforce/schema/User.Name';
 import USER_EMAIL_FIELD from '@salesforce/schema/User.Email';
 
 // Define fields to fetch
-const FIELDS = ['Account.SAP_Code__c', 'Account.Company_Code__c', 'Account.Name'];
+const FIELDS = ['Account.SAP_Code__c', 'Account.Company_Code__c', 'Account.Name', 'Account.Bill_To_Name__c', 'Account.Bill_To_Street__c', 'Account.Bill_To_Zip_Postal_Code__c', 'Account.Bill_To_Country__c', 'Account.Bill_To_Street2__c', 'Account.Bill_To_Street3__c', 'Account.Bill_To_City__c'];   //Bill_To_Name__c, Bill_To_Street__c, Bill_To_Zip_Postal_Code__c, Bill_To_Country__c
+
+
 
 const columns = [
-    { label: 'Customer Number', fieldName: 'KUNNR' },
     { label: 'Posting Date', fieldName: 'BUDAT' },
-    { label: 'Document Number', fieldName: 'BELNR' },
+    { label: 'Invoice Number', fieldName: 'BELNR' }, //invoice Number 
+    { label: 'Bill Date', fieldName: 'BLDAT' }, //bill date
     { label: 'Narration', fieldName: 'SGTXT' },
     { label: 'Document Type', fieldName: 'BLART' },
+    { label: 'TCS-TDS', fieldName: 'KWERT' },
     { label: 'Debit Amount', fieldName: 'DEBIT' }, 
     { label: 'Credit Amount', fieldName: 'CREDIT' },
     { label: 'Closing Balance', fieldName: 'CLSBAL' },
+    /*{ label: 'Customer Number', fieldName: 'KUNNR' },
+    
+    { label: 'Narration', fieldName: 'SGTXT' },
+    { label: 'Document Type', fieldName: 'BLART' },
+    
+    */
     
     /* { label: 'Customer Number', fieldName: 'IV_KUNNR' },
     { label: 'Document Date', fieldName: 'BLDAT' },
@@ -31,7 +40,7 @@ const columns = [
     { label: 'Posting Date', fieldName: 'BUDAT' },
     { label: 'Document Type Description', fieldName: 'LTEXT' },
     { label: 'Reference Key', fieldName: 'XBLNR' }, 
-    { label: 'TCS Amount', fieldName: 'KWERT' },
+   
     { label: 'Company Code', fieldName: 'IV_BUKRS' },
     { label: 'Company Address', fieldName: 'ZADDRESS' },
     { label: 'To date', fieldName: 'IV_FRM_TO' },
@@ -66,7 +75,14 @@ export default class FetchCustomerLedger extends LightningElement {
     @track isShowModal = false;
     @track isShowModal1  = false;
     jsPDFInitialized = false;
-    
+
+    BillToName;
+    BillToStreet;
+    BillToZipPostalCode;
+    BillToCountry;
+    BillToStreet2;
+    BillToStreet3;
+    BillToCity;
     
     connectedCallback() {
         this.loadStaticResource();
@@ -76,7 +92,7 @@ export default class FetchCustomerLedger extends LightningElement {
         const inputString = event.target.value;
         const emails = inputString.split(/[, ]+/).map(email => email.trim());
         this.emailList = emails;
-        
+
     }
     
     handleCCAddress(event) {
@@ -121,7 +137,14 @@ export default class FetchCustomerLedger extends LightningElement {
         if (data) {
             this.AccountSapId = data.fields.SAP_Code__c.value;
             this.CompanyCode = data.fields.Company_Code__c.value;
-            this.AccountName = data.fields.Name.value;     
+            this.AccountName = data.fields.Name.value; 
+            this.BillToName= data.fields.Bill_To_Name__c.value;  
+            this.BillToStreet=data.fields.Bill_To_Street__c.value;
+            this.BillToZipPostalCode=data.fields.Bill_To_Zip_Postal_Code__c.value;
+            this.BillToCountry=data.fields.Bill_To_Country__c.displayValue;
+            this.BillToStreet2=data.fields.Bill_To_Street2__c.value;
+            this.BillToStreet3=data.fields.Bill_To_Street3__c.value;
+            this.BillToCity = data.fields.Bill_To_City__c.value;
         } else if (error) {
             console.error(error);
         }
@@ -197,7 +220,7 @@ export default class FetchCustomerLedger extends LightningElement {
             .catch(error => {
                 console.log("hrllo"+JSON.stringify(error));
                 this.isLoading = true;
-                //this.showToast('Error '+ error.status, error.body.message , 'error');
+                this.showToast('Error '+ error.status, error.body.message , 'error');
                 this.isShowModal = false;
             }); 
         }
@@ -222,16 +245,47 @@ export default class FetchCustomerLedger extends LightningElement {
     } 
     
     //Excel Generation
-    columnHeader = ['Customer Number','Posting Date','Document Number','Narration','Document Type','Debit Amount','Credit Amount','Closing Balance',/* 'Customer Number', 'Document Date','From date','Document Type Description','Reference Key','TCS Amount','Company Code','Company Address','To date','Profit Center'*/ ]
+    columnHeader =['Posting Date','Invoice Number','Bill Date','Narration','Document Type','TCS-TDS','Debit Amount','Credit Amount','Closing Balance'];
+    
+
     exportContactData(){
+
+        let totalDebit1 = 0;
+        let totalCredit1 = 0;
+
+        const dateObject3 = new Date(this.startDate);
+        const formattedDate3 = dateObject3.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric',
+        });
+
+        const dateObject4 = new Date(this.endDate);
+        const formattedDate4 = dateObject4.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric',
+        });
+
         // Prepare a html table
         let doc = '';
         // Add content at the top of the Excel sheet
-        doc += '<h1>Customer Ledger</h1>';
-        doc += '<p>Customer Name : '+this.AccountName + '</p>';
-        doc += '<p>SAP Code : '+this.AccountSapId+ '</p>'; 
-        doc += '<p>From Date : '+this.startDate+ '</p>';
-        doc += '<p>To Date : '+this.endDate+ '</p>';
+        doc += '<h1 style="text-align: center;">Brilliant Polymers Pvt Ltd</h1>';
+
+        doc += '<p style="font-size: 12px; text-align: center;">Plot No.15,16,21/4,MIDC Morivali, Ambernath (W) 421505</p>';
+        doc += '<p style="font-size: 12px; text-align: center;">Maharashtra</p>';
+        doc += '<br>'; // Add a line break
+
+        doc += '<h1 style="font-size: 18px; text-align: center;">'  +this.BillToName+ '</h1>';
+        doc += '<p style="font-size: 12px; text-align: center;">' + this.BillToStreet + ''+ this.BillToStreet2 + ' '+ this.BillToStreet3 + ' '+ this.BillToCity + ' ' + this.BillToZipPostalCode+ ' ' + this.BillToCountry+ ' '+ '</p>';
+        doc += '<br>';
+
+        doc += '<h1 style="font-size: 18px; text-align: center;">Ledger Account</h1>';
+        
+        /* doc += '<p>Customer Name : '+this.AccountName + '</p>';
+        doc += '<p>SAP Code : '+this.AccountSapId+ '</p>';  */
+        doc += '<p style="font-size: 12px; text-align: center;" >From Date : '+formattedDate3+ '</p>';
+        doc += '<p style="font-size: 12px; text-align: center;">To Date : '+formattedDate4+ '</p>'; 
         
         // Start the HTML table
         doc += '<table>';
@@ -251,15 +305,20 @@ export default class FetchCustomerLedger extends LightningElement {
         // Add the data rows
         this.data.forEach(record => {
             doc += '<tr>';
-            doc += '<th>'+record.KUNNR+'</th>'; 
             doc += '<th>'+record.BUDAT+'</th>'; 
             doc += '<th>'+record.BELNR+'</th>'; 
+            doc += '<th>'+record.BLDAT+'</th>'; 
             doc += '<th>'+record.SGTXT+'</th>'; 
             doc += '<th>'+record.BLART+'</th>'; 
+            doc += '<th>'+record.KWERT+'</th>'; 
             doc += '<th>'+record.DEBIT+'</th>'; 
             doc += '<th>'+record.CREDIT+'</th>';
             doc += '<th>'+record.CLSBAL+'</th>'; 
-            /* doc += '<th>'+record.IV_KUNNR+'</th>';  
+
+            // Update the total debit and credit
+            totalDebit1 += parseFloat(record.DEBIT) || 0;
+            totalCredit1 += parseFloat(record.CREDIT) || 0;
+            /*doc += '<th>'+record.IV_KUNNR+'</th>';  
             doc += '<th>'+record.BLDAT+'</th>';             
             doc += '<th>'+record.IV_FRM_DATE+'</th>'; 
             doc += '<th>'+record.LTEXT+'</th>'; 
@@ -270,6 +329,13 @@ export default class FetchCustomerLedger extends LightningElement {
             doc += '<th>'+record.IV_PRCTR+'</th>';*/
             doc += '</tr>';
         });
+
+        doc += '<tr>';
+            doc += '<th colspan="6">Total</th>'; 
+            doc += '<th>'+ totalDebit1 +'</th>'; 
+            doc += '<th>'+ totalCredit1 +'</th>';
+            doc += '<th></th>'; // Assuming the last column is not part of the sum
+            doc += '</tr>';
         doc += '</table>';
         
         var element = 'data:application/vnd.ms-excel,' + encodeURIComponent(doc);
@@ -300,33 +366,81 @@ export default class FetchCustomerLedger extends LightningElement {
     }
     
     handleGeneratePDF() {
+        const dateObject1 = new Date(this.startDate);
+        const formattedDate1 = dateObject1.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric',
+        });
+
+        const dateObject2 = new Date(this.endDate);
+        const formattedDate2 = dateObject2.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric',
+        });
+
+
         if (this.jsPDFInitialized) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
             // Center-align the title
             doc.setFontSize(18); // Adjust the font size as needed
-            doc.text('Ledger Data', doc.internal.pageSize.getWidth() / 2, 10, 'center');
+            doc.text('Brilliant Polymers Pvt Ltd', doc.internal.pageSize.getWidth() / 2, 10, 'center');
+
             
-            doc.setFontSize(12); // Adjust the font size as needed    
-            doc.text('Account Name: ' + this.AccountName, 10, 20);
-            doc.text('Account SAP Code: ' + this.AccountSapId, 10, 30);
-            doc.text('Start Date: ' + this.startDate, 10, 40);
-            doc.text('End Date: ' + this.endDate, 10, 50);
+            doc.setFontSize(10); // Adjust the font size as needed
+            doc.text('Plot No.15,16,21/4,MIDC Morivali, Ambernath (W) 421505', doc.internal.pageSize.getWidth() / 2, 20, 'center');
+            doc.text('Maharashtra', doc.internal.pageSize.getWidth() / 2, 30, 'center');
+
+            // Add a line break
+            //doc.ln(10);
+
+            doc.setFontSize(16); // Adjust the font size as needed
+            doc.text(this.BillToName, doc.internal.pageSize.getWidth() / 2, 50, 'center');
+
+           doc.setFontSize(10); // Adjust the font size as needed
+           doc.text(this.BillToStreet + ' '+ this.BillToStreet2 + ' '+ this.BillToStreet3 + ' '+ this.BillToCity + ' ' + this.BillToZipPostalCode+ ' ' + this.BillToCountry, doc.internal.pageSize.getWidth() / 2, 60, 'center');
+            
+            //doc.ln(10);
+            doc.setFontSize(15); // Adjust the font size as needed
+            doc.text('Ledger Acount ', doc.internal.pageSize.getWidth() / 2, 80, 'center');
+
+
+           
+            /* doc.text('Account Name: ' + this.AccountName, 10, 70);
+            doc.text('Account SAP Code: ' + this.AccountSapId, 10, 80); */
+            doc.setFontSize(10);
+            doc.text('From Date: ' + formattedDate1, 10, 90);
+            doc.text('To Date: ' + formattedDate2, 10, 100);
             
             // Convert the JSON string back to an array of objects
             const ledgerData = this.data;//JSON.parse(this.data);
             
             const data = [];
-            data.push(['Customer Number','Posting Date','Document Number','Narration','Document Type','Debit Amount','Credit Amount','Closing Balance']);
-            
+            data.push(['Posting Date','Invoice Number','Bill Date','Narration','Document Type','TCS-TDS','Debit Amount','Credit Amount','Closing Balance']);
+            let totalDebit = 0;
+            let totalCredit = 0;
+
             ledgerData.forEach(ledData => {
-                data.push([ledData.KUNNR, ledData.BUDAT, ledData.BELNR, ledData.SGTXT, ledData.BLART, ledData.DEBIT, ledData.CREDIT, ledData.CLSBAL]);
+                data.push([ledData.BUDAT, ledData.BELNR, ledData.BLDAT, ledData.SGTXT, ledData.BLART, ledData.KWERT, ledData.DEBIT, ledData.CREDIT, ledData.CLSBAL]);
+                // Accumulate the credit values
+                // Accumulate the debit and credit values
+                totalDebit += parseFloat(ledData.DEBIT) || 0;
+                totalCredit += parseFloat(ledData.CREDIT) || 0;
+            
             });
+
+            // Add the total debit and credit rows to the data array
+            data.push(['', '', '', '', '', 'Total : ', totalDebit.toFixed(2),totalCredit.toFixed(2), '']);
+            //data.push(['', '', '', '', '', '', '', , '']);
+
+
             const tableOptions = {
                 head: [data[0]],
                 body: data.slice(1),
-                startY: 70,
+                startY: 120,
                 styles: {
                     fontSize: 6, // Set the font size for the table
                 },
