@@ -141,9 +141,13 @@ export default class FetchCustomerLedger extends LightningElement {
             this.BillToName= data.fields.Bill_To_Name__c.value;  
             this.BillToStreet=data.fields.Bill_To_Street__c.value;
             this.BillToZipPostalCode=data.fields.Bill_To_Zip_Postal_Code__c.value;
-            this.BillToCountry=data.fields.Bill_To_Country__c.displayValue;
-            this.BillToStreet2=data.fields.Bill_To_Street2__c.value;
-            this.BillToStreet3=data.fields.Bill_To_Street3__c.value;
+            //this.BillToCountry=data.fields.Bill_To_Country__c.displayValue;
+            // Check for "None" in the picklist value
+            this.BillToCountry = data.fields.Bill_To_Country__c.displayValue === 'NONE'
+            ? ''
+            : data.fields.Bill_To_Country__c.displayValue;
+            this.BillToStreet2=data.fields.Bill_To_Street2__c.value || '';
+            this.BillToStreet3=data.fields.Bill_To_Street3__c.value || '';
             this.BillToCity = data.fields.Bill_To_City__c.value;
         } else if (error) {
             console.error(error);
