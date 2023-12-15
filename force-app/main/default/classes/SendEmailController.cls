@@ -1,40 +1,67 @@
 public with sharing class SendEmailController { 
     @AuraEnabled    
-    public static String sendEmail(List<String> toAddress,List<String> toCCAddress,String BodyEmail, String toAttachment, String CurrentUser, String CurrentUserNa){ //String recipientEmail, String emailSubject
-        List<Object> attachmentList = (List<Object>) JSON.deserializeUntyped(toAttachment);
+    public static String sendEmail(List<String> toAddress,List<String> toCCAddress,String BodyEmail, String toAttachment, String CustOutCodeEmail){ 
+        //List<Object> attachmentList = (List<Object>) JSON.deserializeUntyped(toAttachment);
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
        
-        mail.setReplyTo(CurrentUserNa);
-        mail.setSenderDisplayName(CurrentUser);
+        User requestCurrentUser = [SELECT Id, Email, Name, ProfileId FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+
+        Datetime currentDateTime = Datetime.now();
+        String formattedDate = currentDateTime.format('MMM yyyy');
+
+        mail.setReplyTo(requestCurrentUser.Email);
+        mail.setSenderDisplayName(requestCurrentUser.Name);
         mail.setToAddresses(toAddress);
         
         if (toCCAddress != null && !toCCAddress.isEmpty()) {
             mail.setCcAddresses(toCCAddress);
-        }
-        
-        List<Messaging.EmailFileAttachment> emailAttachments = new List<Messaging.EmailFileAttachment>();
-        for (Object attachmentData : attachmentList) {
-            Map<String, Object> attachmentMap = (Map<String, Object>)attachmentData;
-            String fileName = String.valueOf(attachmentMap.get('name'));
-            String contentVersionId = String.valueOf(attachmentMap.get('contentVersionId'));
-            String mimeType = String.valueOf(attachmentMap.get('mimeType'));
-            
-            // Fetch the attachment content based on contentVersionId
-            Blob attachmentContent = YourAttachmentRetrievalMethod(contentVersionId);
-            
-            if (attachmentContent != null) {
-                // Create EmailFileAttachment
-                Messaging.EmailFileAttachment attachment = new Messaging.EmailFileAttachment();
-                attachment.setFileName(fileName);
-                attachment.setBody(attachmentContent);
-                attachment.setContentType(mimeType);
-                emailAttachments.add(attachment);
+        } 
+
+        // Check if there are attachments  
+        if (String.isNotBlank(toAttachment)) { 
+            List<Object> attachmentList = (List<Object>) JSON.deserializeUntyped(toAttachment);
+            List<Messaging.EmailFileAttachment> emailAttachments = new List<Messaging.EmailFileAttachment>();
+
+            for (Object attachmentData : attachmentList) {
+                Map<String, Object> attachmentMap = (Map<String, Object>) attachmentData;
+                String fileName = String.valueOf(attachmentMap.get('name'));
+                String contentVersionId = String.valueOf(attachmentMap.get('contentVersionId'));
+                String mimeType = String.valueOf(attachmentMap.get('mimeType'));
+                
+                // Fetch the attachment content based on contentVersionId
+                Blob attachmentContent = YourAttachmentRetrievalMethod(contentVersionId);
+                
+                if (attachmentContent != null) {
+                    // Create EmailFileAttachment
+                    Messaging.EmailFileAttachment attachment = new Messaging.EmailFileAttachment();
+                    attachment.setFileName(fileName);
+                    attachment.setBody(attachmentContent);
+                    attachment.setContentType(mimeType);
+                    emailAttachments.add(attachment);
+                }
+            }
+
+            // Add attachments to the email
+            if (!emailAttachments.isEmpty()) {
+                mail.setFileAttachments(emailAttachments);
             }
         }
+
+
+
+
         
-        mail.setFileAttachments(emailAttachments);
-        mail.setSubject('Showing Ledger data...! ');
-        mail.setHtmlBody('Hello, </br></br>' + BodyEmail + ' <p>thank You!<br> <br> Regards,<br>'+ CurrentUser +'</p>');
+
+        if(CustOutCodeEmail == 'oustanding'){
+            mail.setSubject('Overdue reminder-'+formattedDate);
+            mail.setHtmlBody('Dear Sir, <br/><br/> Please find the below overdue as of today. You are requested to release the same at the earliest.<br/><br/>' + BodyEmail + ' <p><br/> Regards,<br/>'+ requestCurrentUser.Name +' <br/></p>'  );
+        }
+        else if(CustOutCodeEmail == 'ledger'){
+            mail.setSubject('Showing ledger...! ');
+            mail.setHtmlBody('Dear Sir,  <br/><br/>' + BodyEmail + ' <p>thank You!<br/> <br/> Regards,<br/>'+ requestCurrentUser.Name +'</p>');
+        } 
+        
+        
         mail.setSaveAsActivity(true);
         
         try {
