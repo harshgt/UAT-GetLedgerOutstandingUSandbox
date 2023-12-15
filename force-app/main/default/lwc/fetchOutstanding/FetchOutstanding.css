@@ -1,0 +1,14 @@
+/* Add space between the icon and text */
+.icon-margin {
+    margin-right: 5px; /* Adjust the margin as needed */
+}
+
+.text-margin {
+    margin-left: 5px; /* Adjust the margin as needed */
+}
+
+.icon-container {
+    display: inline-block;
+    padding: 8px; /* Adjust padding as needed for spacing */
+    border-radius: 4px; /* Optional: Add rounded corners to the box */
+}
