@@ -254,6 +254,38 @@ export default class FetchOutstanding extends LightningElement {
  
     columnHeader = ['Customer Name','Document No.','Document Date','Document Type','Reference Document No.','Credit Period','Outstanding Days','Aging','Invoice Amount','Remaining Amount'];
     exportContactData(){
+        const currencyLabel1 = this.Currency; // Default to 'INR' if not set
+
+    
+        this.columnHeader1 = this.columnHeader.map(columnHead => {
+            if(currencyLabel1 === 'INR'){
+                if (columnHead === 'Invoice Amount') {
+                    return `Invoice Amount (${currencyLabel1})`;
+                } else if (columnHead === 'Remaining Amount') {
+                    return `Remaining Amount (${currencyLabel1})`;
+                }
+            }
+            else if(currencyLabel1 === 'USDN'){
+                if (columnHead === 'Invoice Amount') {
+                    return `Invoice Amount (${currencyLabel1})`;
+                } else if (columnHead === 'Remaining Amount') {
+                    return `Remaining Amount (${currencyLabel1})`;
+                }
+            }
+            else if(currencyLabel1 === 'EUR'){
+                if (columnHead === 'Invoice Amount') {
+                    return `Invoice Amount (${currencyLabel1})`;
+                } else if (columnHead === 'Remaining Amount') {
+                    return `Remaining Amount (${currencyLabel1})`;
+                }
+            }
+            return columnHead;
+        });
+
+
+
+
+
         // Prepare a html table
         let doc = '';
         
@@ -274,7 +306,7 @@ export default class FetchOutstanding extends LightningElement {
         doc += '</style>';
         // Add all the Table Headers
         doc += '<tr>';
-        this.columnHeader.forEach(element => {            
+        this.columnHeader1.forEach(element => {            
             doc += '<th>'+ element +'</th>'           
         });
         doc += '</tr>';
@@ -328,6 +360,15 @@ export default class FetchOutstanding extends LightningElement {
     }
     
 
+    predefinedColumnHeaders = ['Customer Name', 'Document No.', 'Document Date', 'Document Type', 'Reference Document No.', 'Credit Period', 'Outstanding Days', 'Aging', 'Invoice Amount', 'Remaining Amount'];
+
+modifyColumnHeader(columnHead, currencyLabel) {
+    if (columnHead === 'Invoice Amount' || columnHead === 'Remaining Amount' ) {
+        return `${columnHead} (${currencyLabel})`;
+    }
+    return columnHead;
+} 
+
     handleGeneratePDF() {
         if (this.jsPDFInitialized) {
             const { jsPDF } = window.jspdf;
@@ -354,7 +395,10 @@ export default class FetchOutstanding extends LightningElement {
                 const outstandingData = this.data;
     
                 const data = [];
-                data.push(['Customer Name', 'Document No.', 'Document Date', 'Document Type', 'Reference Document No.', 'Credit Period', 'Outstanding Days', 'Aging', 'Invoice Amount', 'Remaining Amount']);
+
+                data.push(this.predefinedColumnHeaders.map(columnHead => this.modifyColumnHeader(columnHead, this.Currency)));
+    
+                //data.push(['Customer Name', 'Document No.', 'Document Date', 'Document Type', 'Reference Document No.', 'Credit Period', 'Outstanding Days', 'Aging', 'Invoice Amount', 'Remaining Amount']);
     
                 outstandingData.forEach(outData => {
                     data.push([outData.CustName, outData.Belnr, outData.Bldat, outData.Blart, outData.Xblnr, outData.CreditP, outData.OutDays, outData.Ageing, outData.InvAmt, outData.RemAmt]);
@@ -453,11 +497,27 @@ export default class FetchOutstanding extends LightningElement {
             'InvAmt': 'Invoice Amount',
             'RemAmt': 'Remaining Amount',
         };
+
+
+        //const currencyLabel = this.Currency || 'INR'; // Default to 'INR' if not set
+
+        // Apply the condition to modify column headers based on currency label
+        const modifiedHeaders = Object.values(fieldLabelMap).map(columnHead => {
+            if (columnHead === 'Invoice Amount' || columnHead === 'Remaining Amount') {
+                return `${columnHead} (${this.Currency})`;
+            }
+            return columnHead;
+        });
     
-        // Adding column headers to the table using labels with custom color
+        // Adding modified column headers to the table using labels with custom color
+        modifiedHeaders.forEach(modifiedHeader => {
+            tableHTML += `<th style="border: 1px solid black; background-color: #3498db; font-size: 14px; padding: 12px; line-height: 18px; color: #ffffff;">${modifiedHeader}</th>`;
+        });
+    
+        /* // Adding column headers to the table using labels with custom color
         Object.keys(fieldLabelMap).forEach(fieldName => {
             tableHTML += `<th style="border: 1px solid black; background-color: #3498db; font-size: 14px; padding: 12px; line-height: 18px; color: #ffffff;">${fieldLabelMap[fieldName]}</th>`;
-        });
+        }); */
     
         tableHTML += '</tr>';
     

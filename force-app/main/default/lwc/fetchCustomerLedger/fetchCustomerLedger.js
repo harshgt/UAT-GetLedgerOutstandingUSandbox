@@ -22,7 +22,7 @@ const columns = [
     /* { label: 'Narration', fieldName: 'SGTXT' }, */
     { label: 'Document Type', fieldName: 'BLART' },
     { label: 'TCS-TDS', fieldName: 'KWERT' },
-    { label: 'Debit Amount', fieldName: 'DEBIT' }, 
+    { label: 'Debit Amount', fieldName: 'DEBIT' },  
     { label: 'Credit Amount', fieldName: 'CREDIT' },
     { label: 'Closing Balance', fieldName: 'CLSBAL' },
     /*{ label: 'Customer Number', fieldName: 'KUNNR' },
@@ -73,6 +73,7 @@ export default class FetchCustomerLedger extends LightningElement {
     BillToStreet3;
     BillToCity;
     Currency;
+    pdfColumnHeaders;
     
     connectedCallback() {
         this.loadStaticResource();
@@ -152,24 +153,30 @@ export default class FetchCustomerLedger extends LightningElement {
     
         this.columns = this.columns.map(column => {
             if(currencyLabel === 'INR'){
-                if (column.fieldName === 'InvAmt') {
-                    column.label = `Invoice Amount (${currencyLabel})`;
-                } else if (column.fieldName === 'RemAmt') {
-                    column.label = `Remaining Amount (${currencyLabel})`;
+                if (column.fieldName === 'DEBIT') {
+                    column.label = `Debit Amount (${currencyLabel})`;
+                } else if (column.fieldName === 'CREDIT') {
+                    column.label = `Credit Amount (${currencyLabel})`;
+                } else if (column.fieldName === 'CLSBAL') {
+                    column.label = `Closing Balance (${currencyLabel})`;
                 }
             }else if(currencyLabel === 'USDN'){
-                if (column.fieldName === 'InvAmt') {
-                    column.label = `Invoice Amount (${currencyLabel})`;
-                } else if (column.fieldName === 'RemAmt') {
-                    column.label = `Remaining Amount (${currencyLabel})`;
+                if (column.fieldName === 'DEBIT') {
+                    column.label = `Debit Amount (${currencyLabel})`;
+                } else if (column.fieldName === 'CREDIT') {
+                    column.label = `Credit Amount (${currencyLabel})`;
+                } else if (column.fieldName === 'CLSBAL') {
+                    column.label = `Closing Balance (${currencyLabel})`;
                 }
             }
             else if(currencyLabel === 'EUR'){
-                    if (column.fieldName === 'InvAmt') {
-                        column.label = `Invoice Amount (${currencyLabel})`;
-                    } else if (column.fieldName === 'RemAmt') {
-                        column.label = `Remaining Amount (${currencyLabel})`;
-                    }
+                if (column.fieldName === 'DEBIT') {
+                    column.label = `Debit Amount (${currencyLabel})`;
+                } else if (column.fieldName === 'CREDIT') {
+                    column.label = `Credit Amount (${currencyLabel})`;
+                } else if (column.fieldName === 'CLSBAL') {
+                    column.label = `Closing Balance (${currencyLabel})`;
+                }
                 }
                 
             
@@ -282,6 +289,8 @@ export default class FetchCustomerLedger extends LightningElement {
                     return `Debit Amount (${currencyLabel1})`;
                 } else if (columnHead === 'Credit Amount') {
                     return `Credit Amount (${currencyLabel1})`;
+                }else if (columnHead === 'Closing Balance') {
+                    return `Closing Balance (${currencyLabel1})`;
                 }
             }
             else if(currencyLabel1 === 'USDN'){
@@ -289,6 +298,8 @@ export default class FetchCustomerLedger extends LightningElement {
                     return `Debit Amount (${currencyLabel1})`;
                 } else if (columnHead === 'Credit Amount') {
                     return `Credit Amount (${currencyLabel1})`;
+                }else if (columnHead === 'Closing Balance') {
+                    return `Closing Balance (${currencyLabel1})`;
                 }
             }
             else if(currencyLabel1 === 'EUR'){
@@ -296,12 +307,12 @@ export default class FetchCustomerLedger extends LightningElement {
                     return `Debit Amount (${currencyLabel1})`;
                 } else if (columnHead === 'Credit Amount') {
                     return `Credit Amount (${currencyLabel1})`;
+                }else if (columnHead === 'Closing Balance') {
+                    return `Closing Balance (${currencyLabel1})`;
                 }
             }
             return columnHead;
         });
-
-
 
 
 
@@ -357,7 +368,7 @@ export default class FetchCustomerLedger extends LightningElement {
         doc += '</style>';
         // Add all the Table Headers
         doc += '<tr>';
-        this.columnHeader.forEach(element => {            
+        this.columnHeader1.forEach(element => {            
             doc += '<th>'+ element +'</th>'           
         });
         doc += '</tr>';
@@ -422,9 +433,22 @@ export default class FetchCustomerLedger extends LightningElement {
             });
         }
     }
-   
-    
+
+
+
+
+predefinedColumnHeaders = ['Document Date','Invoice Number','Bill Date'/* ,'Narration' */,'Document Type','TCS-TDS','Debit Amount','Credit Amount','Closing Balance'];
+
+modifyColumnHeader(columnHead, currencyLabel) {
+    if (columnHead === 'Debit Amount' || columnHead === 'Credit Amount' || columnHead === 'Closing Balance'  ) {
+        return `${columnHead} (${currencyLabel})`;
+    }
+    return columnHead;
+} 
+
+
     handleGeneratePDF() {
+       
         const dateObject1 = new Date(this.startDate);
         const formattedDate1 = dateObject1.toLocaleDateString('en-GB', {
             day: 'numeric',
@@ -465,7 +489,14 @@ export default class FetchCustomerLedger extends LightningElement {
             doc.setFont('times', 'normal');
             const ledgerData = this.data;//JSON.parse(this.data);
             const data = [];
-            data.push(['Document Date','Invoice Number','Bill Date'/* ,'Narration' */,'Document Type','TCS-TDS','Debit Amount','Credit Amount','Closing Balance']);
+
+
+           
+            data.push(this.predefinedColumnHeaders.map(columnHead => this.modifyColumnHeader(columnHead, this.Currency)));
+
+
+
+            //data.push(['Document Date','Invoice Number','Bill Date'/* ,'Narration' */,'Document Type','TCS-TDS','Debit Amount','Credit Amount','Closing Balance']);
             let totalDebit = 0;
             let totalCredit = 0;
 
@@ -524,6 +555,8 @@ export default class FetchCustomerLedger extends LightningElement {
     
     }
 
+
+ 
 
     
     showDataForEmail(){
