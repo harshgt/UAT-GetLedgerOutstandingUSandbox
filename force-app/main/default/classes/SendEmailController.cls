@@ -51,14 +51,17 @@ public with sharing class SendEmailController {
 
 
         
-        String Disclaimers = 'Disclaimer at the end of the ledger for any clarification to contact';
         if(CustOutCodeEmail == 'oustanding'){
             mail.setSubject('Overdue reminder-'+formattedDate);
+            String Disclaimers = '<span style="color: red;">Disclaimer : Disclaimer at the end of the ledger for any clarification, please contact us.</span>';
+        
             mail.setHtmlBody('Dear Sir, <br/><br/> Please find the below overdue as of today. You are requested to release the same at the earliest.<br/><br/>' + BodyEmail + ' <p><br/> Regards,<br/>'+ requestCurrentUser.Name +' <br/><br/><br/><br/> '+ Disclaimers +'</p>'  );
         }
         else if(CustOutCodeEmail == 'ledger'){
             mail.setSubject('Showing ledger...! ');
-            mail.setHtmlBody('Dear Sir,  <br/><br/>' + BodyEmail + ' <p>thank You!<br/> <br/> Regards,<br/>'+ requestCurrentUser.Name +' <br/><br/><br/><br/> '+ Disclaimers +'</p>'  );
+            String Disclaimers1 = '<span style="color: red;">Disclaimer : Disclaimer at the end of the outstanding for any clarification, please contact us.</span>';
+        
+            mail.setHtmlBody('Dear Sir,  <br/><br/>' + BodyEmail + ' <p>thank You!<br/> <br/> Regards,<br/>'+ requestCurrentUser.Name +' <br/><br/><br/><br/> '+ Disclaimers1 +'</p>'  );
         } 
         
         

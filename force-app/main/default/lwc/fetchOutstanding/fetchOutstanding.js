@@ -13,19 +13,21 @@ import MY_ADD from '@salesforce/resourceUrl/footerAddress';
 // Define fields to fetch
 const FIELDS = ['Account.SAP_Code__c', 'Account.Company_Code__c', 'Account.Name', 'Account.Bill_To_Name__c', 'Account.Bill_To_Name2__c', 'Account.Currency__c'];
 
+
 const columns = [
     
     { label: 'Customer Name', fieldName: 'CustName' },
-    { label: 'Document No.', fieldName: 'Belnr' },
+    { label: 'Document Number', fieldName: 'Belnr' },
     { label: 'Document Date', fieldName: 'Bldat' },
-    { label: 'Document Type', fieldName: 'Blart' },
-    { label: 'Reference Document No.', fieldName: 'Xblnr' }, 
-    { label: 'Credit Period', fieldName: 'CreditP' },
-    { label: 'Outstanding Days', fieldName: 'OutDays' },
+    { label: 'Due Date', fieldName: 'netdt' },
+    { label: 'Overdue Days', fieldName: 'OutDays' },
     { label: 'Aging', fieldName: 'Ageing' },
-    { label: 'Invoice Amount', fieldName: 'InvAmt' },
-    { label: 'Remaining Amount', fieldName: 'RemAmt' }, 
+    { label: 'Invoice Amount LC ', fieldName: 'InvAmt' },
+    { label: 'Remaining Amount IC ', fieldName: 'RemAmt' },
 
+    /* { label: 'Document Type', fieldName: 'Blart' },
+    { label: 'Reference Document No.', fieldName: 'Xblnr' }, 
+    { label: 'Credit Period', fieldName: 'CreditP' }, */
     /* { label: 'Not Due', fieldName: 'IV_NOTDUE' }, */
     /* { label: 'Customer code', fieldName: 'IV_KUNNR' },    
     { label: 'REM_AMT_DC', fieldName: 'RemAmtDC' }, */
@@ -60,6 +62,8 @@ export default class FetchOutstanding extends LightningElement {
     BillToName;
     BillToName2;
     Currency;
+
+
     
     hideModalBox() {  
         this.isShowModal = false;
@@ -138,12 +142,14 @@ export default class FetchOutstanding extends LightningElement {
             this.AccountName = data.fields.Name.value;
             this.BillToName= data.fields.Bill_To_Name__c.value;  
             this.BillToName2 = data.fields.Bill_To_Name2__c.value || '';
-            this.Currency = data.fields.Currency__c.value;
+            this.Currency = data.fields.Currency__c.value || 'INR';
             this.updateColumnLabels();
         } else if (error) {
             console.error(error);
         }
     }
+
+
 
     updateColumnLabels() {
         const currencyLabel = this.Currency; // Default to 'INR' if not set
@@ -151,22 +157,22 @@ export default class FetchOutstanding extends LightningElement {
         this.columns = this.columns.map(column => {
             if(currencyLabel === 'INR'){
                 if (column.fieldName === 'InvAmt') {
-                    column.label = `Invoice Amount (${currencyLabel})`;
+                    column.label = `Invoice Amount LC  (${currencyLabel})`;
                 } else if (column.fieldName === 'RemAmt') {
-                    column.label = `Remaining Amount (${currencyLabel})`;
+                    column.label = `Remaining Amount IC (${currencyLabel})`;
                 }
             }else if(currencyLabel === 'USDN'){
                 if (column.fieldName === 'InvAmt') {
-                    column.label = `Invoice Amount (${currencyLabel})`;
+                    column.label = `Invoice Amount LC (${currencyLabel})`;
                 } else if (column.fieldName === 'RemAmt') {
-                    column.label = `Remaining Amount (${currencyLabel})`;
+                    column.label = `Remaining Amount IC (${currencyLabel})`;
                 }
             }
             else if(currencyLabel === 'EUR'){
                     if (column.fieldName === 'InvAmt') {
-                        column.label = `Invoice Amount (${currencyLabel})`;
+                        column.label = `Invoice Amount LC (${currencyLabel})`;
                     } else if (column.fieldName === 'RemAmt') {
-                        column.label = `Remaining Amount (${currencyLabel})`;
+                        column.label = `Remaining Amount IC (${currencyLabel})`;
                     }
                 }
                 
@@ -252,31 +258,36 @@ export default class FetchOutstanding extends LightningElement {
         this.dispatchEvent(event);
     }
  
-    columnHeader = ['Customer Name','Document No.','Document Date','Document Type','Reference Document No.','Credit Period','Outstanding Days','Aging','Invoice Amount','Remaining Amount'];
+    columnHeader = ['Customer Name','Document Number','Document Date','Due Date', 'Overdue Days', 'Aging','Invoice Amount LC','Remaining Amount IC'];
+    //columnHeader = ['Customer Name','Document Number.','Document Date','Document Type','Reference Document No.','Credit Period','Outstanding Days','Aging','Invoice Amount','Remaining Amount'];
     exportContactData(){
+
+
+        let totalInvoiceAmt1 = 0;
+        let totalRemainingAmt1 = 0;
         const currencyLabel1 = this.Currency; // Default to 'INR' if not set
 
     
         this.columnHeader1 = this.columnHeader.map(columnHead => {
             if(currencyLabel1 === 'INR'){
-                if (columnHead === 'Invoice Amount') {
-                    return `Invoice Amount (${currencyLabel1})`;
-                } else if (columnHead === 'Remaining Amount') {
-                    return `Remaining Amount (${currencyLabel1})`;
+                if (columnHead === 'Invoice Amount LC') {
+                    return `Invoice Amount LC (${currencyLabel1})`;
+                } else if (columnHead === 'Remaining Amount IC') {
+                    return `Remaining Amount IC (${currencyLabel1})`;
                 }
             }
             else if(currencyLabel1 === 'USDN'){
-                if (columnHead === 'Invoice Amount') {
-                    return `Invoice Amount (${currencyLabel1})`;
-                } else if (columnHead === 'Remaining Amount') {
-                    return `Remaining Amount (${currencyLabel1})`;
+                if (columnHead === 'Invoice Amount LC') {
+                    return `Invoice Amount LC (${currencyLabel1})`;
+                } else if (columnHead === 'Remaining Amount IC') {
+                    return `Remaining Amount IC (${currencyLabel1})`;
                 }
             }
             else if(currencyLabel1 === 'EUR'){
-                if (columnHead === 'Invoice Amount') {
-                    return `Invoice Amount (${currencyLabel1})`;
-                } else if (columnHead === 'Remaining Amount') {
-                    return `Remaining Amount (${currencyLabel1})`;
+                if (columnHead === 'Invoice Amount LC') {
+                    return `Invoice Amount LC (${currencyLabel1})`;
+                } else if (columnHead === 'Remaining Amount IC') {
+                    return `Remaining Amount IC (${currencyLabel1})`;
                 }
             }
             return columnHead;
@@ -318,18 +329,32 @@ export default class FetchOutstanding extends LightningElement {
             doc += '<th>'+record.CustName+'</th>';
             doc += '<th>'+record.Belnr+'</th>';
             doc += '<th>'+record.Bldat+'</th>';
-            doc += '<th>'+record.Blart+'</th>';
-            doc += '<th>'+record.Xblnr+'</th>';
-            doc += '<th>'+record.CreditP+'</th>';
+            doc += '<th>'+record.netdt+'</th>';
             doc += '<th>'+record.OutDays+'</th>';
             doc += '<th>'+record.Ageing+'</th>';
             doc += '<th>'+record.InvAmt+'</th>'; 
             doc += '<th>'+record.RemAmt+'</th>'; 
             /* doc += '<th>'+record.OutDays+'</th>'; */
             /*   doc += '<th>'+record.IV_BUKRS+'</th>';  */
+
+            // Update the total debit and credit
+            totalInvoiceAmt1 += parseFloat(record.InvAmt) || 0;
+            totalRemainingAmt1 += parseFloat(record.RemAmt) || 0;
+
             doc += '</tr>';
         });
+
+
+        doc += '<tr>';
+            doc += '<th colspan="6">Total</th>'; 
+            doc += '<th>'+ totalInvoiceAmt1 +'</th>'; 
+            doc += '<th>'+ totalRemainingAmt1 +'</th>';
+            
+            doc += '</tr>';
         doc += '</table>';
+
+        
+        doc += '<br/><br/><br/> <span style="color: red;">Disclaimer : Disclaimer at the end of the Outstanding for any clarification to contact.</span>';
         
         var element = 'data:application/vnd.ms-excel,' + encodeURIComponent(doc);
         let downloadElement = document.createElement('a');
@@ -360,10 +385,11 @@ export default class FetchOutstanding extends LightningElement {
     }
     
 
-    predefinedColumnHeaders = ['Customer Name', 'Document No.', 'Document Date', 'Document Type', 'Reference Document No.', 'Credit Period', 'Outstanding Days', 'Aging', 'Invoice Amount', 'Remaining Amount'];
-
-modifyColumnHeader(columnHead, currencyLabel) {
-    if (columnHead === 'Invoice Amount' || columnHead === 'Remaining Amount' ) {
+    //predefinedColumnHeaders = ['Customer Name', 'Document No.', 'Document Date', 'Document Type', 'Reference Document No.', 'Credit Period', 'Outstanding Days', 'Aging', 'Invoice Amount', 'Remaining Amount'];
+    predefinedColumnHeaders = ['Customer Name', 'Document Number', 'Document Date', 'Due Date', 'Overdue Days', 'Aging', 'Invoice Amount LC', 'Remaining Amount IC'];
+    
+    modifyColumnHeader(columnHead, currencyLabel) {
+    if (columnHead === 'Invoice Amount LC' || columnHead === 'Remaining Amount IC' ) {
         return `${columnHead} (${currencyLabel})`;
     }
     return columnHead;
@@ -400,9 +426,18 @@ modifyColumnHeader(columnHead, currencyLabel) {
     
                 //data.push(['Customer Name', 'Document No.', 'Document Date', 'Document Type', 'Reference Document No.', 'Credit Period', 'Outstanding Days', 'Aging', 'Invoice Amount', 'Remaining Amount']);
     
+
+                let totalInvoiceAmt = 0;
+                let totalRemainingAmt = 0;
+
                 outstandingData.forEach(outData => {
-                    data.push([outData.CustName, outData.Belnr, outData.Bldat, outData.Blart, outData.Xblnr, outData.CreditP, outData.OutDays, outData.Ageing, outData.InvAmt, outData.RemAmt]);
+                    data.push([outData.CustName, outData.Belnr, outData.Bldat, outData.netdt, outData.OutDays, outData.Ageing, outData.InvAmt, outData.RemAmt]);
+                    //data.push([outData.CustName, outData.Belnr, outData.Bldat, outData.Blart, outData.Xblnr, outData.CreditP, outData.OutDays, outData.Ageing, outData.InvAmt, outData.RemAmt]);
+                    totalInvoiceAmt += parseFloat(outData.InvAmt) || 0;
+                    totalRemainingAmt += parseFloat(outData.RemAmt) || 0;
                 });
+
+                data.push(['', '', '', '', '','Total : ', totalInvoiceAmt.toFixed(2),totalRemainingAmt.toFixed(2)]);
     
                 const tableOptions = {
                     head: [data[0]],
@@ -439,12 +474,21 @@ modifyColumnHeader(columnHead, currencyLabel) {
                     doc.addImage(footerImage, 'PNG', imgX, imgY, imgWidth, imgHeight);
                     currentPage++;
                 }
-    
+                this.addDisclaimer(doc); 
                 doc.save('outstanding_Data.pdf');
             };
         } else {
             console.error('jsPDF library not initialized');
         }
+    }
+
+
+    addDisclaimer(doc) {
+        // Add disclaimer text
+        doc.setTextColor(255, 0, 0);
+        doc.setFontSize(8);
+        doc.text('Disclaimer : Disclaimer at the end of the Outstanding for any clarification to contact.', 10, doc.internal.pageSize.getHeight() - 40);
+        doc.setTextColor(0, 0, 0); 
     }
     
     showDataForEmail(){
@@ -487,15 +531,13 @@ modifyColumnHeader(columnHead, currencyLabel) {
         // Mapping of field names to desired labels
         const fieldLabelMap = {
             'CustName': 'Customer Name',
-            'Belnr': 'Document No.',
+            'Belnr': 'Document Number',
             'Bldat': 'Document Date',
-            'Blart': 'Document Type',
-            'Xblnr': 'Reference Document No.',
-            'CreditP': 'Credit Period',
-            'OutDays': 'Outstanding Days',
+            'netdt': 'Due Date',
+            'OutDays': 'Overdue Days',
             'Ageing': 'Aging',
-            'InvAmt': 'Invoice Amount',
-            'RemAmt': 'Remaining Amount',
+            'InvAmt': 'Invoice Amount LC',
+            'RemAmt': 'Remaining Amount IC',
         };
 
 
@@ -503,7 +545,7 @@ modifyColumnHeader(columnHead, currencyLabel) {
 
         // Apply the condition to modify column headers based on currency label
         const modifiedHeaders = Object.values(fieldLabelMap).map(columnHead => {
-            if (columnHead === 'Invoice Amount' || columnHead === 'Remaining Amount') {
+            if (columnHead === 'Invoice Amount LC' || columnHead === 'Remaining Amount IC') {
                 return `${columnHead} (${this.Currency})`;
             }
             return columnHead;

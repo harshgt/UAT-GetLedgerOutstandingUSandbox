@@ -141,7 +141,7 @@ export default class FetchCustomerLedger extends LightningElement {
             this.BillToStreet2=data.fields.Bill_To_Street2__c.value || '';
             this.BillToStreet3=data.fields.Bill_To_Street3__c.value || '';
             this.BillToCity = data.fields.Bill_To_City__c.value;
-            this.Currency = data.fields.Currency__c.value;
+            this.Currency = data.fields.Currency__c.value || 'INR';
             this.updateColumnLabels();
         } else if (error) {
             console.error(error);
@@ -401,11 +401,16 @@ export default class FetchCustomerLedger extends LightningElement {
         });
 
         doc += '<tr>';
-            doc += '<th colspan="6">Total</th>'; 
+            doc += '<th colspan="5">Total</th>'; 
             doc += '<th>'+ totalDebit1 +'</th>'; 
             doc += '<th>'+ totalCredit1 +'</th>';
+            doc += '<th></th>';
             doc += '</tr>';
         doc += '</table>';
+
+         
+        doc += '<br/><br/><br/> <span style="color: red;">Disclaimer : Disclaimer at the end of the Ledger for any clarification to contact.</span>';
+        
         
         var element = 'data:application/vnd.ms-excel,' + encodeURIComponent(doc);
         let downloadElement = document.createElement('a');
@@ -437,14 +442,14 @@ export default class FetchCustomerLedger extends LightningElement {
 
 
 
-predefinedColumnHeaders = ['Document Date','Invoice Number','Bill Date'/* ,'Narration' */,'Document Type','TCS-TDS','Debit Amount','Credit Amount','Closing Balance'];
+    predefinedColumnHeaders = ['Document Date','Invoice Number','Bill Date'/* ,'Narration' */,'Document Type','TCS-TDS','Debit Amount','Credit Amount','Closing Balance'];
 
-modifyColumnHeader(columnHead, currencyLabel) {
-    if (columnHead === 'Debit Amount' || columnHead === 'Credit Amount' || columnHead === 'Closing Balance'  ) {
-        return `${columnHead} (${currencyLabel})`;
-    }
-    return columnHead;
-} 
+    modifyColumnHeader(columnHead, currencyLabel) {
+        if (columnHead === 'Debit Amount' || columnHead === 'Credit Amount' || columnHead === 'Closing Balance'  ) {
+            return `${columnHead} (${currencyLabel})`;
+        }
+        return columnHead;
+    } 
 
 
     handleGeneratePDF() {
@@ -506,7 +511,7 @@ modifyColumnHeader(columnHead, currencyLabel) {
                 totalCredit += parseFloat(ledData.CREDIT) || 0;
             });
 
-            data.push(['', '', '', '', '', 'Total : ', totalDebit.toFixed(2),totalCredit.toFixed(2), '']);
+            data.push(['', '', '', '', 'Total : ', totalDebit.toFixed(2),totalCredit.toFixed(2), '']);
            
             const tableOptions = {
                 head: [data[0]],
@@ -544,7 +549,11 @@ modifyColumnHeader(columnHead, currencyLabel) {
                 doc.addImage(footerImage, 'PNG', imgX, imgY, imgWidth, imgHeight);
                 currentPage++;
             }
+            this.addDisclaimer(doc); 
+
             doc.save('ledger_Data.pdf');
+            
+           
             };
         } 
         else 
@@ -553,6 +562,14 @@ modifyColumnHeader(columnHead, currencyLabel) {
             
         }
     
+    }
+
+    addDisclaimer(doc) {
+        // Add disclaimer text
+        doc.setTextColor(255, 0, 0);
+        doc.setFontSize(8);
+        doc.text('Disclaimer : Disclaimer at the end of the ledger for any clarification to contact.', 10, doc.internal.pageSize.getHeight() - 40);
+        doc.setTextColor(0, 0, 0); 
     }
 
 
