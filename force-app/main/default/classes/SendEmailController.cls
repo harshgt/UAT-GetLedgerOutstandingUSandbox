@@ -53,13 +53,13 @@ public with sharing class SendEmailController {
         
         if(CustOutCodeEmail == 'oustanding'){
             mail.setSubject('Overdue reminder-'+formattedDate);
-            String Disclaimers = '<span style="color: red;">Disclaimer : Disclaimer at the end of the ledger for any clarification, please contact us.</span>';
+            String Disclaimers = '<span style="color: red;">Disclaimer : Disclaimer at the end of the oustanding for any clarification, please contact us.</span>';
         
             mail.setHtmlBody('Dear Sir, <br/><br/> Please find the below overdue as of today. You are requested to release the same at the earliest.<br/><br/>' + BodyEmail + ' <p><br/> Regards,<br/>'+ requestCurrentUser.Name +' <br/><br/><br/><br/> '+ Disclaimers +'</p>'  );
         }
         else if(CustOutCodeEmail == 'ledger'){
             mail.setSubject('Showing ledger...! ');
-            String Disclaimers1 = '<span style="color: red;">Disclaimer : Disclaimer at the end of the outstanding for any clarification, please contact us.</span>';
+            String Disclaimers1 = '<span style="color: red;">Disclaimer : Disclaimer at the end of the ledger for any clarification, please contact us.</span>';
         
             mail.setHtmlBody('Dear Sir,  <br/><br/>' + BodyEmail + ' <p>thank You!<br/> <br/> Regards,<br/>'+ requestCurrentUser.Name +' <br/><br/><br/><br/> '+ Disclaimers1 +'</p>'  );
         } 
@@ -77,13 +77,19 @@ public with sharing class SendEmailController {
     
     // Implement a method to retrieve attachment content based on contentVersionId
     public static Blob YourAttachmentRetrievalMethod(String contentVersionId) {
-        ContentVersion contentVersion = [SELECT VersionData FROM ContentVersion WHERE Id = :contentVersionId LIMIT 1]; 
-        if (contentVersion != null && contentVersion.VersionData != null) {
-            // Retrieve and return the content data as a Blob
-            return contentVersion.VersionData;
-        } else {
-            // Return null if the content cannot be retrieved
-            return null;
+        List<ContentVersion> contentVersions = [SELECT VersionData FROM ContentVersion WHERE Id = :contentVersionId LIMIT 1];
+        
+        if (contentVersions != null && !contentVersions.isEmpty()) {
+            ContentVersion contentVersion = contentVersions[0];
+            
+            if (contentVersion.VersionData != null) {
+                return contentVersion.VersionData;
+            }
         }
+        
+        // Return null if no matching ContentVersion records are found or VersionData is null
+        return null;
     }
+    
+   
 }
