@@ -147,13 +147,15 @@
                 <div class="slds-p-around_medium">
                     
                     
-                    <lightning-input label="TO" type="text" onchange={handleToAddress} required></lightning-input>
+                    <lightning-input label="TO" type="text" value={emails} onchange={handleToAddress} required></lightning-input>
                     <lightning-input label="CC" type="text" onchange={handleCCAddress}></lightning-input>
                     <!-- <lightning-input-rich-text class="slds-p-top_small" 
                     value={getEma}
                     onchange={handleRischText}
                     >
                 </lightning-input-rich-text>  -->
+
+
 
                 <lightning-input-rich-text 
                     class="slds-p-top_small" 

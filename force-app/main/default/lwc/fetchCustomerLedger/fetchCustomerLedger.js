@@ -9,19 +9,21 @@ import JS_PDF from '@salesforce/resourceUrl/jsPDFLibrary';
 import JS_PDF_AUTO_TABLE from '@salesforce/resourceUrl/jsPDFAutoTable';
 import MY_LOGO from '@salesforce/resourceUrl/MyDomainLogo';
 import MY_ADD from '@salesforce/resourceUrl/footerAddress';
+import getEmailsForAccount from '@salesforce/apex/GetContactController.getEmailsForAccount';
 
 // Define fields to fetch
-const FIELDS = ['Account.SAP_Code__c', 'Account.Company_Code__c', 'Account.Name', 'Account.Bill_To_Name__c', 'Account.Bill_To_Street__c', 'Account.Bill_To_Zip_Postal_Code__c', 'Account.Bill_To_Country__c', 'Account.Bill_To_Street2__c', 'Account.Bill_To_Street3__c', 'Account.Bill_To_City__c', 'Account.Bill_To_Name2__c' , 'Account.Currency__c'];   //Bill_To_Name__c, Bill_To_Street__c, Bill_To_Zip_Postal_Code__c, Bill_To_Country__c
+const FIELDS = ['Account.SAP_Code__c', 'Account.Company_Code__c', 'Account.Name', 'Account.Bill_To_Name__c', 'Account.Bill_To_Street__c', 'Account.Bill_To_Zip_Postal_Code__c', 'Account.Bill_To_Country__c', 'Account.Bill_To_Street2__c', 'Account.Bill_To_Street3__c', 'Account.Bill_To_City__c', 'Account.Bill_To_Name2__c' , 'Account.Currency__c', 'Account.Customer_Type__c'];   //Bill_To_Name__c, Bill_To_Street__c, Bill_To_Zip_Postal_Code__c, Bill_To_Country__c
 
 
 
 const columns = [
     { label: 'Document Date', fieldName: 'BUDAT' },
     { label: 'Invoice Number', fieldName: 'BELNR' }, //invoice Number 
-    { label: 'Bill Date', fieldName: 'BLDAT' }, //bill date
+    /* { label: 'Bill Date', fieldName: 'BLDAT' }, */ //bill date
     /* { label: 'Narration', fieldName: 'SGTXT' }, */
-    { label: 'Document Type', fieldName: 'BLART' },
-    { label: 'TCS-TDS', fieldName: 'KWERT' },
+    { label: 'Document Type', fieldName: 'LTEXT' }, //LTEXT = BLART
+     { label: 'TCS-TDS', fieldName: 'KWERT' }, 
+    
     { label: 'Debit Amount', fieldName: 'DEBIT' },  
     { label: 'Credit Amount', fieldName: 'CREDIT' },
     { label: 'Closing Balance', fieldName: 'CLSBAL' },
@@ -40,6 +42,8 @@ const columns = [
     { label: 'Profit Center', fieldName: 'IV_PRCTR' }, 
     */
 ];
+
+
 
 
 export default class FetchCustomerLedger extends LightningElement {
@@ -71,9 +75,15 @@ export default class FetchCustomerLedger extends LightningElement {
     BillToCountry;
     BillToStreet2;
     BillToStreet3;
+    CustomerType;
     BillToCity;
     Currency;
     pdfColumnHeaders;
+    emails = '';
+
+
+    startDateOut;
+    endDateOut;
     
     connectedCallback() {
         this.loadStaticResource();
@@ -120,6 +130,9 @@ export default class FetchCustomerLedger extends LightningElement {
         this.isShowModal1 = false;  
         this.uploadedFileNames = [];   
     }
+
+
+    
     
     
     //fetch data of Account using UIRecordAPI
@@ -131,7 +144,7 @@ export default class FetchCustomerLedger extends LightningElement {
             this.AccountName = data.fields.Name.value; 
             this.BillToName= data.fields.Bill_To_Name__c.value;  
             this.BillToName2 = data.fields.Bill_To_Name2__c.value || '';
-            this.BillToStreet=data.fields.Bill_To_Street__c.value;
+            this.BillToStreet=data.fields.Bill_To_Street__c.value || '';
             this.BillToZipPostalCode=data.fields.Bill_To_Zip_Postal_Code__c.value;
             //this.BillToCountry=data.fields.Bill_To_Country__c.displayValue;
             // Check for "None" in the picklist value
@@ -140,16 +153,35 @@ export default class FetchCustomerLedger extends LightningElement {
             : data.fields.Bill_To_Country__c.displayValue;
             this.BillToStreet2=data.fields.Bill_To_Street2__c.value || '';
             this.BillToStreet3=data.fields.Bill_To_Street3__c.value || '';
-            this.BillToCity = data.fields.Bill_To_City__c.value;
+            this.BillToCity = data.fields.Bill_To_City__c.value || '';
             this.Currency = data.fields.Currency__c.value || 'INR';
+            this.CustomerType = data.fields.Customer_Type__c.displayValue;
+            
             this.updateColumnLabels();
         } else if (error) {
             console.error(error);
         }
     }
 
+
+    @wire(getEmailsForAccount, { accountId: '$recordId' })
+    wiredEmails({ error, data }) {
+        if (data) {
+            this.emails = data.join(', '); // Join emails with comma separation
+            const emails =  this.emails.split(',').map(email => email.trim());
+            this.emailList = emails;
+        } else if (error) {
+            console.error('Error retrieving emails', error);
+        }
+    }
+
+
+
+
     updateColumnLabels() {
         const currencyLabel = this.Currency; // Default to 'INR' if not set
+
+        
     
         this.columns = this.columns.map(column => {
             if(currencyLabel === 'INR'){
@@ -275,7 +307,7 @@ export default class FetchCustomerLedger extends LightningElement {
     } 
     
     //Excel Generation
-    columnHeader =['Document Date','Invoice Number','Bill Date'/* ,'Narration' */,'Document Type','TCS-TDS','Debit Amount','Credit Amount','Closing Balance'];
+    columnHeader =['Document Date','Invoice Number'/* ,'Bill Date' *//* ,'Narration' */,'Document Type','TCS-TDS','Debit Amount','Credit Amount','Closing Balance'];
     
 
     exportContactData(){
@@ -322,6 +354,8 @@ export default class FetchCustomerLedger extends LightningElement {
 
         let totalDebit1 = 0;
         let totalCredit1 = 0;
+        let totalClosing1 = 0;
+        
 
         const dateObject3 = new Date(this.startDate);
         const formattedDate3 = dateObject3.toLocaleDateString('en-GB', {
@@ -377,9 +411,9 @@ export default class FetchCustomerLedger extends LightningElement {
             doc += '<tr>';
             doc += '<th>'+record.BUDAT+'</th>'; 
             doc += '<th>'+record.BELNR+'</th>'; 
-            doc += '<th>'+record.BLDAT+'</th>'; 
+            /* doc += '<th>'+record.BLDAT+'</th>'; */ 
             /* doc += '<th>'+record.SGTXT+'</th>'; */ 
-            doc += '<th>'+record.BLART+'</th>'; 
+            doc += '<th>'+record.LTEXT+'</th>';  // LTEXT == BLART
             doc += '<th>'+record.KWERT+'</th>'; 
             doc += '<th>'+record.DEBIT+'</th>'; 
             doc += '<th>'+record.CREDIT+'</th>';
@@ -388,6 +422,11 @@ export default class FetchCustomerLedger extends LightningElement {
             // Update the total debit and credit
             totalDebit1 += parseFloat(record.DEBIT) || 0;
             totalCredit1 += parseFloat(record.CREDIT) || 0;
+            /* totalClosing1 += parseFloat(record.CLSBAL) || 0; */
+           totalClosing1 = (totalDebit1-totalCredit1 ) || 0;
+
+
+
             /*doc += '<th>'+record.IV_KUNNR+'</th>';  
             doc += '<th>'+record.BLDAT+'</th>';             
             doc += '<th>'+record.IV_FRM_DATE+'</th>'; 
@@ -401,10 +440,11 @@ export default class FetchCustomerLedger extends LightningElement {
         });
 
         doc += '<tr>';
-            doc += '<th colspan="5">Total</th>'; 
+            doc += '<th colspan="4">Total</th>'; 
             doc += '<th>'+ totalDebit1 +'</th>'; 
             doc += '<th>'+ totalCredit1 +'</th>';
-            doc += '<th></th>';
+             doc += '<th>'+ totalClosing1 +'</th>'; 
+            /* doc += '<th></th>'; */
             doc += '</tr>';
         doc += '</table>';
 
@@ -442,7 +482,7 @@ export default class FetchCustomerLedger extends LightningElement {
 
 
 
-    predefinedColumnHeaders = ['Document Date','Invoice Number','Bill Date'/* ,'Narration' */,'Document Type','TCS-TDS','Debit Amount','Credit Amount','Closing Balance'];
+    predefinedColumnHeaders = ['Document Date','Invoice Number'/*,'Bill Date' ,'Narration' */,'Document Type','TCS-TDS','Debit Amount','Credit Amount','Closing Balance'];
 
     modifyColumnHeader(columnHead, currencyLabel) {
         if (columnHead === 'Debit Amount' || columnHead === 'Credit Amount' || columnHead === 'Closing Balance'  ) {
@@ -476,21 +516,74 @@ export default class FetchCustomerLedger extends LightningElement {
             const img = new Image();
             img.src = logoDataUrl;
             img.onload = () => {                
-            const imageWidth = 120;
+            const imageWidth = 60;
             const xCoordinate = (doc.internal.pageSize.getWidth() - imageWidth) / 2;
-            doc.addImage(img, 'PNG', xCoordinate, 5, imageWidth, 30);
+            doc.addImage(img, 'PNG', xCoordinate, 10, imageWidth, 20);
                 
             doc.setFontSize(20); 
             doc.setFont('times', 'bold');
-            doc.text('Ledger Account', doc.internal.pageSize.getWidth() / 2, 50, 'center');
-            doc.setFontSize(12); 
-            doc.text(' Customer Name : '+this.BillToName+ ' ' +this.BillToName2, 10, 70);
-            doc.setFont('times', 'normal');
-            doc.setFontSize(12); 
+            doc.text('Ledger Account', doc.internal.pageSize.getWidth() / 2, 40, 'center');
+            
+                    /* Adjust the Font size and Style */
+                    doc.setFontSize(12);
+                    // Set font style for Customer Name (Bold)
+                    doc.setFont('times', 'bold');
+                    doc.text('Customer Name : ', 15, 50);
+
+                    // Set font style for this.BillToName (Normal)
+                    doc.setFont('times', 'normal');
+                    doc.text(this.BillToName + ' ' + this.BillToName2, 48, 50);
+                      
+                    
+            /* doc.setFontSize(12); 
+            doc.text(' Customer Name : '+this.BillToName+ ' ' +this.BillToName2, 10, 50);
+            doc.setFont('times', 'normal'); */
+
+
+                    doc.setFontSize(12);
+
+                    // Set font style for the label "Address" (Bold)
+                    doc.setFont('times', 'bold');
+                    doc.text('Address : ', 15, 60);
+
+                    // Set font style for the address details (Normal)
+                    doc.setFont('times', 'normal');
+                    doc.text(this.BillToStreet + ' ' + this.BillToStreet2 + ' ' + this.BillToStreet3 + ' ' + this.BillToCity + ' ' + this.BillToZipPostalCode + ' ' + this.BillToCountry, 33, 60);
+
+
+
+           /*  doc.setFontSize(12); 
             doc.text('Address : '+ this.BillToStreet + ' '+ this.BillToStreet2 + ' '+ this.BillToStreet3 + ' '+ this.BillToCity + ' ' + this.BillToZipPostalCode+ ' ' + this.BillToCountry, 10, 80);
-            doc.setFontSize(12);
+             */
+                    // Assuming 'doc' is your PDF document instance
+
+                    doc.setFontSize(12);
+
+                    // Set font style for the labels "From Date" and "To Date" (Bold)
+                    doc.setFont('times', 'bold');
+                    doc.text('From Date : ', 16, 75);
+
+                    // Set font style for the date values (Normal)
+                    doc.setFont('times', 'normal');
+                    doc.text(formattedDate1, 40, 75);
+
+                    // Set font style for the label "To Date" (Bold)
+                    doc.setFont('times', 'bold');
+                    doc.text(' To Date : ', 60, 75);
+
+                    // Set font style for the date value (Normal)
+                    doc.setFont('times', 'normal');
+                    //doc.text(formattedDate2, doc.getTextWidth('From Date: ' + formattedDate1 + ' To Date: ') + 50, 70);
+                    doc.text(formattedDate1, 80, 75);
+
+
+           /*  doc.setFontSize(12);
             doc.setFont('times', 'bold');
             doc.text('From Date: ' + formattedDate1 + ' To Date: ' + formattedDate2, 10, 100);
+ */
+
+
+
             doc.setFont('times', 'normal');
             const ledgerData = this.data;//JSON.parse(this.data);
             const data = [];
@@ -504,31 +597,42 @@ export default class FetchCustomerLedger extends LightningElement {
             //data.push(['Document Date','Invoice Number','Bill Date'/* ,'Narration' */,'Document Type','TCS-TDS','Debit Amount','Credit Amount','Closing Balance']);
             let totalDebit = 0;
             let totalCredit = 0;
+            let totalClosing = 0;
+            
 
             ledgerData.forEach(ledData => {
-                data.push([ledData.BUDAT, ledData.BELNR, ledData.BLDAT, /* ledData.SGTXT, */ ledData.BLART, ledData.KWERT, ledData.DEBIT, ledData.CREDIT, ledData.CLSBAL]);
+                data.push([ledData.BUDAT, ledData.BELNR, /*ledData.BLDAT,  ledData.SGTXT, */ ledData.LTEXT, ledData.KWERT, ledData.DEBIT, ledData.CREDIT, ledData.CLSBAL]); //LTEXT==BLART
                 totalDebit += parseFloat(ledData.DEBIT) || 0;
                 totalCredit += parseFloat(ledData.CREDIT) || 0;
+                //totalClosing += parseFloat(ledData.CLSBAL) || 0;
+                totalClosing = (totalDebit-totalCredit ) || 0;
+                
             });
 
-            data.push(['', '', '', '', 'Total : ', totalDebit.toFixed(2),totalCredit.toFixed(2), '']);
+            data.push(['', '', '', 'Total : ', totalDebit.toFixed(2),totalCredit.toFixed(2), totalClosing.toFixed(2)]); 
            
             const tableOptions = {
                 head: [data[0]],
                 body: data.slice(1),
                 /* startY: 120, */
                 styles: {
-                    fontSize: 6, // Set the font size for the table
+                    fontSize: 9, // Set the font size for the table
+                    cellPadding: 2,
+                    halign: 'center',
+                },
+                
+                bodyStyles: {
+                    valign: 'middle', // Vertical alignment for the entire body middle
                 },
             };
 
             const pageSize = doc.internal.pageSize;
             const pageHeight = pageSize.height - 10; 
             let currentPage = 1;
-            let startY = 120;
+            let startY = 77;
 
-            for (let i = 1; i < data.length; i += 22) {
-                const tableData = data.slice(i, i + 22); 
+            for (let i = 1; i < data.length; i += 15) {
+                const tableData = data.slice(i, i + 15); 
 
                 if (currentPage > 1) {
                     doc.addPage();
@@ -583,7 +687,26 @@ export default class FetchCustomerLedger extends LightningElement {
     sendEmailData1() {
         const attachm = JSON.stringify(this.attachmentData);
         const LedgerCodeEmails = 'ledger';
-        sendEmailWithPDF({toAddress: this.emailList, toCCAddress : this.emailCCList, BodyEmail : this.getEma, toAttachment : attachm,  CustOutCodeEmail : LedgerCodeEmails})
+        const CustomerName = this.BillToName+ ' '+ this.BillToName2;
+        
+        const dateObject3 = new Date(this.startDate);
+        const formattedDate3 = dateObject3.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric',
+        });
+
+        const dateObject4 = new Date(this.endDate);
+        const formattedDate4 = dateObject4.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric',
+        });
+
+
+
+
+        sendEmailWithPDF({toAddress: this.emailList, toCCAddress : this.emailCCList, BodyEmail : this.getEma, toAttachment : attachm,  CustCodeEmail : LedgerCodeEmails, CustomerName : CustomerName  }) 
         .then((data) => {
             // Show success toast notification
             if(data === 'true')

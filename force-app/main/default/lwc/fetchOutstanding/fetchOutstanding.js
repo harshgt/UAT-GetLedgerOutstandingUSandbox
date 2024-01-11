@@ -10,6 +10,11 @@ import JS_PDF_AUTO_TABLE from '@salesforce/resourceUrl/jsPDFAutoTable';
 import MY_LOGO from '@salesforce/resourceUrl/MyDomainLogo';
 import MY_ADD from '@salesforce/resourceUrl/footerAddress';
 
+import getEmailsForAccount from '@salesforce/apex/GetContactController.getEmailsForAccount';
+
+
+
+
 // Define fields to fetch
 const FIELDS = ['Account.SAP_Code__c', 'Account.Company_Code__c', 'Account.Name', 'Account.Bill_To_Name__c', 'Account.Bill_To_Name2__c', 'Account.Currency__c'];
 
@@ -62,6 +67,7 @@ export default class FetchOutstanding extends LightningElement {
     BillToName;
     BillToName2;
     Currency;
+    emails = '';
 
 
     
@@ -85,10 +91,11 @@ export default class FetchOutstanding extends LightningElement {
         ];
     }
     
+    
     handleToAddress(event) {
         const inputString = event.target.value;
-        const emails = inputString.split(/[, ]+/).map(email => email.trim());
-        this.emailList = emails;    
+        const emails = inputString.split(',').map(email => email.trim());
+        this.emailList = emails;   
     }
     
     handleCCAddress(event) {
@@ -96,6 +103,10 @@ export default class FetchOutstanding extends LightningElement {
         const CCemails = inputCCString.split(/[, ]+/).map(email => email.trim());
         this.emailCCList = CCemails;
     }
+
+
+    
+    
     
     
     handleRischText(event) {
@@ -150,6 +161,19 @@ export default class FetchOutstanding extends LightningElement {
     }
 
 
+    @wire(getEmailsForAccount, { accountId: '$recordId' })
+    wiredEmails({ error, data }) {
+        if (data) {
+            this.emails = data.join(', '); // Join emails with comma separation
+            const emails =  this.emails.split(',').map(email => email.trim());
+            this.emailList = emails;
+        } else if (error) {
+            console.error('Error retrieving emails', error);
+        }
+    }
+
+
+
 
     updateColumnLabels() {
         const currencyLabel = this.Currency; // Default to 'INR' if not set
@@ -188,13 +212,14 @@ export default class FetchOutstanding extends LightningElement {
     
     //to get the current date
     connectedCallback() {
+        //this.loadContactData();
         //this.loadStaticResource();
         const today = new Date();
         const day = String(today.getDate()).padStart(2, '0');
         const month = String(today.getMonth() + 1).padStart(2, '0');
         const year = today.getFullYear();
-        this.currentDate = `${year}-${month}-${day}`; // Corrected the date format to YYYY-MM-DD   
-    }
+        this.currentDate = `${day}/${month}/${year}`; // Corrected the date format to YYYY-MM-DD `${year}-${month}-${day}`   
+    }   
     
     //get the selected radio Type Value
     selectedTypeValueHandler(event){
@@ -202,12 +227,17 @@ export default class FetchOutstanding extends LightningElement {
         this.SelectedValueForType = this.selectedTypeValue;
         this.isButtonDisabledForOutstd = false;  
     }
+
+
+    
     
     handleClickForOutStanding(){
         this.isShowModal = true;
+
+        //this.logRelatedContacts();
         // check if any data is blank & show error message
         if(this.AccountSapId && this.CompanyCode){
-            getCustomerOutStandingData({AccountSapId : this.AccountSapId, CompanyCode : this.CompanyCode, SelectedValueForType : this.SelectedValueForType,  })
+            getCustomerOutStandingData({AccountSapId : this.AccountSapId, CompanyCode : this.CompanyCode, SelectedValueForType : this.SelectedValueForType  })
             .then(data => {
                 //this.data = JSON.stringify(data);
                 if (data && data.customer_detailsSet) {
@@ -247,6 +277,21 @@ export default class FetchOutstanding extends LightningElement {
             this.isShowModal = false;
         }
     }
+
+
+
+    /* logRelatedContacts() {
+        getContactForAccount({ accountId: this.recordId })
+            .then(contactData => {
+                if (contactData) {
+                    console.log('Related Contacts:', contactData);
+                    this.relatedContacts = contactData;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching related contacts:', error);
+            });
+    } */
      
     // Function to show toast notifications
     showToast(title, message, variant) {
@@ -305,7 +350,8 @@ export default class FetchOutstanding extends LightningElement {
         doc += '<p>Customer Name : '+this.BillToName+ ' '+ this.BillToName2 + '</p>';
         doc += '<p>SAP Code : '+this.AccountSapId+ '</p>'; 
         doc += '<p>Type : '+this.SelectedValueForType+ '</p>'; 
-        
+        doc += '<p>Date : '+this.currentDate+ '</p>';
+
         // Start the HTML table
         doc += '<table>';
         // Add styles for the table
@@ -403,19 +449,20 @@ export default class FetchOutstanding extends LightningElement {
             const img = new Image();
             img.src = logoDataUrl;
             img.onload = () => {
-                const imageWidth = 120;
+                const imageWidth = 60;
                 const xCoordinate = (doc.internal.pageSize.getWidth() - imageWidth) / 2;
-                doc.addImage(img, 'PNG', xCoordinate, 5, imageWidth, 30);
+                doc.addImage(img, 'PNG', xCoordinate, 10, imageWidth, 20);
 
                 doc.setFontSize(20);
                 doc.setFont('times', 'bold');
-                doc.text('Outstanding Account', doc.internal.pageSize.getWidth() / 2, 50, 'center');
+                doc.text('Outstanding Account', doc.internal.pageSize.getWidth() / 2, 40, 'center');
                 doc.setFont('times', 'normal');
                 
                 doc.setFontSize(12);
-                doc.text('Customer Name: ' +this.BillToName+ ' '+ this.BillToName2 , 10, 60);
-                doc.text('Account SAP Code: ' + this.AccountSapId, 10, 70);
-                doc.text('Type: ' + this.SelectedValueForType, 10, 80);
+                doc.text('Customer Name : ' +this.BillToName+ ' '+ this.BillToName2 , 15, 55);
+                doc.text('Account SAP Code : ' + this.AccountSapId, 15, 65);
+                doc.text('Type : ' + this.SelectedValueForType, 15, 75);
+                doc.text('Date : ' + this.currentDate, 15, 85);
     
                 // Convert the JSON string back to an array of objects
                 const outstandingData = this.data;
@@ -444,16 +491,23 @@ export default class FetchOutstanding extends LightningElement {
                     body: data.slice(1),
                     /* startY: 80,  */
                     styles: {
-                        fontSize: 6,
+                        fontSize: 9, // Set the font size for the table
+                        cellPadding: 2,
+                        halign: 'center',
+
+                    },
+                    
+                    bodyStyles: {
+                        valign: 'middle', // Vertical alignment for the entire body middle
                     },
                 };
                 const pageSize = doc.internal.pageSize;
                 const pageHeight = pageSize.height - 10; 
                 let currentPage = 1;
-                let startY = 100;
+                let startY = 90;
 
-                for (let i = 1; i < data.length; i += 22) {
-                    const tableData = data.slice(i, i + 22); 
+                for (let i = 1; i < data.length; i += 15) {
+                    const tableData = data.slice(i, i + 15); 
 
                     if (currentPage > 1) {
                         doc.addPage();
@@ -494,12 +548,17 @@ export default class FetchOutstanding extends LightningElement {
     showDataForEmail(){
         this.isShowModal1 = true;
         
+        
     }
     
     sendEmailData1() {
         const attachm = JSON.stringify(this.attachmentData);
         const OutCodeEmails = 'oustanding';
-        sendEmailWithPDF({toAddress: this.emailList, toCCAddress : this.emailCCList, BodyEmail : this.formattedData, toAttachment : attachm, CustOutCodeEmail : OutCodeEmails})
+        const CustomerName = this.BillToName+ ' '+ this.BillToName2;
+
+        
+
+        sendEmailWithPDF({toAddress: this.emailList, toCCAddress : this.emailCCList, BodyEmail : this.formattedData, toAttachment : attachm, CustCodeEmail : OutCodeEmails, CustomerName : CustomerName   }) 
         .then((data) => {
             // Show success toast notification
             if(data === 'true')
@@ -573,8 +632,10 @@ export default class FetchOutstanding extends LightningElement {
             // Iterate through columns and add corresponding values
             Object.keys(fieldLabelMap).forEach(fieldName => {
                 const cellValue = item[fieldName];
-                tableHTML += `<td style="border: 1px solid black; font-size: 12px; padding: 12px; line-height: 16px;">${cellValue}</td>`;
-    
+                 // Adjust the width dynamically based on content
+                const cellStyle = 'min-width: 100px; white-space: nowrap;';                
+                tableHTML += `<td style="border: 1px solid black; font-size: 12px; padding: 12px; line-height: 16px; ${cellStyle}">${cellValue}</td>`;
+
                 // Calculate totals for 'InvAmt' and 'RemAmt'
                 if (fieldName === 'InvAmt') {
                     totalInvAmt += parseFloat(cellValue) || 0;
