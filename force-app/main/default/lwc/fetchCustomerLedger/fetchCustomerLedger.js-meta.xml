@@ -5,4 +5,14 @@
     <targets>
         <target>lightning__RecordPage</target>
     </targets>
+    <targetConfigs>
+        <!-- Applying this config to all types of pages like record page, app page etc. -->
+        <targetConfig targets="lightning__RecordPage">
+            <supportedFormFactors>
+                <!-- Remove the below line if you want component to show onlyu on mobile devices. -->
+                <supportedFormFactor type="Large" /> 
+                <supportedFormFactor type="Small" />
+            </supportedFormFactors>
+        </targetConfig>
+    </targetConfigs>
 </LightningComponentBundle>
