@@ -19,13 +19,19 @@ public with sharing class customerOutStandingData {
     
     public static String getCustomerOutstandingSAP(String AccountSapId, String CompanyCode, String SelectedValueForType){  
         try {
+            
+            Authorization__c customSetting  = Authorization__c.getInstance();
+            String Username = customSetting.Username__c;
+            String Password = customSetting.Password__c;
+            String CustomerOutstandingURL = customSetting.CustomerOutstandingURL__c;
+            
+            
             Http http = new Http();
             HttpRequest req = new HttpRequest();
-            req.setEndpoint('https://brilliant-polymers-ixuv1tbr.it-cpi011-rt.cfapps.jp20.hana.ondemand.com/http/GETCUSTOMEROUTSTANDING');
+            req.setEndpoint(CustomerOutstandingURL);
             req.setMethod('GET');
-            String username = 'harshal.thakare@sapours.net.in';
-            String password = '@Shyam004';
-            Blob headerValue = Blob.valueOf(username + ':' + password);
+            
+            Blob headerValue = Blob.valueOf(Username + ':' + Password);
             String authorizationHeader = 'Basic ' + EncodingUtil.base64Encode(headerValue);
             req.setHeader('authorization', authorizationHeader);
             

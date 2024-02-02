@@ -17,16 +17,17 @@ public class OpportunityTriggerHandlerUpdate
         
         if (!opportunitiesToUpdate.isEmpty())
         { 
-            getDescription(opportunitiesToUpdate);
+            //getDescription(opportunitiesToUpdate);
+            System.EnqueueJob(new OpportQueueable (opportunities));
         }
         
     }
     
     
     
-    private static void getDescription(List<Opportunity> opportunities)
+   /* private static void getDescription(List<Opportunity> opportunities)
     {
         System.EnqueueJob(new OpportQueueable (opportunities));
-    }
+    }*/
     
 }

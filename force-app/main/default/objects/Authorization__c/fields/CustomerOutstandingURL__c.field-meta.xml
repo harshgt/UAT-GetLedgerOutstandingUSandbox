@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CustomerOutstandingURL__c</fullName>
+    <description>URL for receiving Customer Outstanding data from SAP side to Salesforce</description>
+    <externalId>false</externalId>
+    <label>CustomerOutstandingURL</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Url</type>
+</CustomField>

@@ -3,11 +3,14 @@ trigger OpportunityIntegrationTrigger on Opportunity (before update) {
 
     if (Trigger.isBefore) {
         if (Trigger.isUpdate) {
-            // Check if the trigger has already run in this context
             if (!hasRun) {
                 hasRun = true;
+            
                 OpportunityTriggerHandlerUpdate.setDescription(Trigger.new);
-            }
+             }
         }
     }
+    
+    
+    
 }

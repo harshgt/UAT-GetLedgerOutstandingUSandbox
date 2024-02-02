@@ -6,7 +6,7 @@ public class LeadCalloutTriggerHandlerClass {
         List<Lead> ToBeQueueLeadList = new List<Lead>();
         
         for(Lead leads : NewleadList){
-            if(leads.Status == 'Create Customer'){
+            if(leads.Status == 'Create Customer'){		// && leads.Customer_Type__c != 'Domestic Vendor'
                 ToBeQueueLeadList.add(leads);
             }
         }

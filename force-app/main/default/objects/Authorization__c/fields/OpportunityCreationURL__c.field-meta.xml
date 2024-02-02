@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>OpportunityCreationURL__c</fullName>
+    <description>URL for creation of Opportunity of SAP side from Salesforce</description>
+    <externalId>false</externalId>
+    <label>OpportunityCreationURL</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Url</type>
+</CustomField>

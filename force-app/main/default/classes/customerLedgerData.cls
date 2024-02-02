@@ -27,11 +27,21 @@ public with sharing class customerLedgerData {
         try {
             Http http = new Http();
             HttpRequest req = new HttpRequest();
-            req.setEndpoint('https://brilliant-polymers-ixuv1tbr.it-cpi011-rt.cfapps.jp20.hana.ondemand.com/http/GETCUSTOMERLEGER');
+            
+            Authorization__c customSetting  = Authorization__c.getInstance();
+             //Authorization__c customSetting = Authorization__c.getOrgDefaults();
+            
+            String Username = customSetting.Username__c;
+            String Password = customSetting.Password__c;
+            String CustomerLedgerURL = customSetting.CustomerLedgerURL__c;
+            String Endpoints =CustomerLedgerURL;
+            req.setEndpoint(Endpoints);
             req.setMethod('GET');
-            String username = 'harshal.thakare@sapours.net.in';
-            String password = '@Shyam004';
-            Blob headerValue = Blob.valueOf(username + ':' + password);
+            
+            
+            //String Username = 'harshal.thakare@sapours.net.in';
+            //String Password = '@Shyam004';
+            Blob headerValue = Blob.valueOf(Username + ':' + Password);
             String authorizationHeader = 'Basic ' + EncodingUtil.base64Encode(headerValue);
             req.setHeader('authorization', authorizationHeader);
             
@@ -44,7 +54,7 @@ public with sharing class customerLedgerData {
             Dom.XmlNode IDroot3 = root.addChildElement('ToDate', null, null).addTextnode(formattedEndDate);
             
             String XmlBody = doc.toXmlString();
-            //System.debug(XmlBody);
+            System.debug(XmlBody);
             
             //Adding Body to request
             req.setBody(XmlBody);

@@ -25,7 +25,10 @@ trigger AccountUpdateTrigger3 on Account (before update) {
                                           AccList.Bill_To_Street2__c != Trigger.oldMap.get(AccList.Id).Bill_To_Street2__c ||
                                           AccList.Bill_To_Street3__c != Trigger.oldMap.get(AccList.Id).Bill_To_Street3__c ||
                                           AccList.Bill_To_Zip_Postal_Code__c != Trigger.oldMap.get(AccList.Id).Bill_To_Zip_Postal_Code__c ||
-                                          AccList.BillingAddress != Trigger.oldMap.get(AccList.Id).BillingAddress);           
+                                          AccList.BillingAddress != Trigger.oldMap.get(AccList.Id).BillingAddress ||
+                                          AccList.Search_Term__c != Trigger.oldMap.get(AccList.Id).Search_Term__c ||
+                                          AccList.Incoterms__c != Trigger.oldMap.get(AccList.Id).Incoterms__c ||
+                                          AccList.Payment_Term__c != Trigger.oldMap.get(AccList.Id).Payment_Term__c);
             
             if(SalesAreaChanged){
                 

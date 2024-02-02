@@ -6,17 +6,21 @@ public class CPICalloutService
       
         String errormessage;
         list<contact> conlist = new list<contact>();
-        for(contact con:[select Id, SAPId__c from Contact where Id =: contactIds ]){
-           
+        for(contact con:[select Id, SAPId__c from Contact where Id =: contactIds ]){ 
+               
+            Authorization__c customSetting  = Authorization__c.getInstance();
+            String Username = customSetting.Username__c;
+            String Password = customSetting.Password__c;
+			String ContactUpdateURL = customSetting.ContactUpdateURL__c;   
+               
 			Http http = new Http();            
             // Make the HTTP callout to the CPI endpoint
             HttpRequest req = new HttpRequest();
-            req.setEndpoint('https://brilliant-polymers-ixuv1tbr.it-cpi011-rt.cfapps.jp20.hana.ondemand.com/http/update/Cp'); // Replace 'CPI_Endpoint' with your Named Credential's endpoint URL
+            req.setEndpoint(ContactUpdateURL);
             req.setMethod('POST');
             
-            String username = 'harshal.thakare@sapours.net.in';        
-            String password = '@Shyam004';            
-            Blob headerValue = Blob.valueOf(username + ':' + password);        
+                       
+            Blob headerValue = Blob.valueOf(Username + ':' + Password);        
             String authorizationHeader = 'Basic' + EncodingUtil.base64Encode(headerValue);
             
             req.setHeader('authorization', authorizationHeader);
@@ -47,6 +51,7 @@ public class CPICalloutService
           try {
             
             HttpResponse res = http.send(req);
+            System.debug(res);
             System.debug(res.getBody());
             System.debug(res.getStatus());
             System.debug(res.getStatusCode());
@@ -65,15 +70,8 @@ public class CPICalloutService
                         }
                     }
                     
-                } else {
-                    errorMessage = 'No Body Found';
-                    System.debug(errorMessage);
-                    
-                    
-                }
-            } else {
-                errorMessage = 'Successful transaction';
-            }
+                } 
+            } 
             
             
         }
