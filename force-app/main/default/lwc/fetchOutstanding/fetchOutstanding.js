@@ -69,6 +69,8 @@ export default class FetchOutstanding extends LightningElement {
     Currency;
     emails = '';
 
+    Disclaimer = 'Disclaimer: For any queries please contact on collections@brilliantpolymers.com';
+
 
     
     hideModalBox() {  
@@ -167,6 +169,8 @@ export default class FetchOutstanding extends LightningElement {
             this.emails = data.join(', '); // Join emails with comma separation
             const emails =  this.emails.split(',').map(email => email.trim());
             this.emailList = emails;
+            //console.log('show emails1 ', this.emailList);
+            //console.log('show emails2 ', emails);
         } else if (error) {
             console.error('Error retrieving emails', error);
         }
@@ -400,7 +404,7 @@ export default class FetchOutstanding extends LightningElement {
         doc += '</table>';
 
         
-        doc += '<br/><br/><br/> <span style="color: red;">Disclaimer : Disclaimer at the end of the Outstanding for any clarification to contact.</span>';
+        doc += '<br/><br/><br/> <span style="color: red;">' +this.Disclaimer+ '</span>';
         
         var element = 'data:application/vnd.ms-excel,' + encodeURIComponent(doc);
         let downloadElement = document.createElement('a');
@@ -541,7 +545,7 @@ export default class FetchOutstanding extends LightningElement {
         // Add disclaimer text
         doc.setTextColor(255, 0, 0);
         doc.setFontSize(8);
-        doc.text('Disclaimer : Disclaimer at the end of the Outstanding for any clarification to contact.', 10, doc.internal.pageSize.getHeight() - 40);
+        doc.text(this.Disclaimer, 10, doc.internal.pageSize.getHeight() - 40);
         doc.setTextColor(0, 0, 0); 
     }
     
@@ -612,7 +616,7 @@ export default class FetchOutstanding extends LightningElement {
     
         // Adding modified column headers to the table using labels with custom color
         modifiedHeaders.forEach(modifiedHeader => {
-            tableHTML += `<th style="border: 1px solid black; background-color: #3498db; font-size: 14px; padding: 12px; line-height: 18px; color: #ffffff;">${modifiedHeader}</th>`;
+            tableHTML += `<th style="border: 1px solid black; background-color: #3498db; text-align: center; font-size: 14px; padding: 12px; line-height: 18px; color: #ffffff;">${modifiedHeader}</th>`;
         });
     
         /* // Adding column headers to the table using labels with custom color
@@ -633,9 +637,9 @@ export default class FetchOutstanding extends LightningElement {
             Object.keys(fieldLabelMap).forEach(fieldName => {
                 const cellValue = item[fieldName];
                  // Adjust the width dynamically based on content
-                const cellStyle = 'min-width: 100px; white-space: nowrap;';                
-                tableHTML += `<td style="border: 1px solid black; font-size: 12px; padding: 12px; line-height: 16px; ${cellStyle}">${cellValue}</td>`;
-
+                const cellStyle = 'min-width: 100px; text-align: center; white-space: nowrap;';                
+                tableHTML += `<td style="border: 1px solid black; font-size: 12px; padding: 12px; line-height: 16px; text-align: center; ${cellStyle}">${cellValue}</td>`;
+                
                 // Calculate totals for 'InvAmt' and 'RemAmt'
                 if (fieldName === 'InvAmt') {
                     totalInvAmt += parseFloat(cellValue) || 0;

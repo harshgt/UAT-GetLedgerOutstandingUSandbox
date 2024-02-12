@@ -82,11 +82,13 @@ export default class FetchCustomerLedger extends LightningElement {
     emails = '';
 
 
-    startDateOut;
-    endDateOut;
+    
+
+    Disclaimer = 'Disclaimer: For any queries please contact on collections@brilliantpolymers.com';
+
     
     connectedCallback() {
-        this.loadStaticResource();
+        //this.loadStaticResource();
     }
     
     handleToAddress(event) {
@@ -226,6 +228,22 @@ export default class FetchCustomerLedger extends LightningElement {
                 const htmlText = await response.text();
                 this.getEma = htmlText;
                 //console.log(this.getEma);
+                //use for dates
+                
+                const startDate = new Date(this.startDate);
+                const formattedStartDate = `${startDate.getDate()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getFullYear()}`;
+                const formattedStartDateHTML = `<span style="font-weight: bold;">${formattedStartDate}</span>`;
+                
+                const endDate = new Date(this.endDate);
+                const formattedEndDate = `${endDate.getDate()}-${(endDate.getMonth() + 1).toString().padStart(2, '0')}-${endDate.getFullYear()}`;
+                const formattedEndDateHTML = `<span style="font-weight: bold;">${formattedEndDate}</span>`;
+                
+               /*  console.log('formattedStartDateHTML  => ',formattedStartDateHTML);
+               console.log('formattedEndDateHTML ==> ', formattedEndDateHTML);
+               console.log(formattedStartDate);   */             
+                this.getEma = this.getEma.replace('[StartDate]', formattedStartDateHTML);
+                this.getEma = this.getEma.replace('[EndDate]', formattedEndDateHTML);
+
             } else {
                 //console.error('Failed to fetch HTML content:', response.statusText);
             }
@@ -246,6 +264,7 @@ export default class FetchCustomerLedger extends LightningElement {
     
     //call Http class of ledger
     ledgerFetchHandler() {
+        this.loadStaticResource();
         //window.alert(this.startDate + ' and\n ' + this.endDate);
         this.isShowModal = true;  
         
@@ -449,7 +468,7 @@ export default class FetchCustomerLedger extends LightningElement {
         doc += '</table>';
 
          
-        doc += '<br/><br/><br/> <span style="color: red;">Disclaimer : Disclaimer at the end of the Ledger for any clarification to contact.</span>';
+        doc += '<br/><br/><br/> <span style="color: red;">' +this.Disclaimer+ '</span>';
         
         
         var element = 'data:application/vnd.ms-excel,' + encodeURIComponent(doc);
@@ -548,7 +567,9 @@ export default class FetchCustomerLedger extends LightningElement {
 
                     // Set font style for the address details (Normal)
                     doc.setFont('times', 'normal');
-                    doc.text(this.BillToStreet + ' ' + this.BillToStreet2 + ' ' + this.BillToStreet3 + ' ' + this.BillToCity + ' ' + this.BillToZipPostalCode + ' ' + this.BillToCountry, 33, 60);
+                    //doc.text(this.BillToStreet + ' ' + this.BillToStreet2 + ' ' + this.BillToStreet3 + ' ' + this.BillToCity + ' ' + this.BillToZipPostalCode + ' ' + this.BillToCountry, 33, 60);
+                    doc.text(this.BillToStreet + ' ' + this.BillToStreet2 + ' ' /* + this.BillToStreet3 + ' ' + this.BillToCity + ' ' + this.BillToZipPostalCode + ' ' + this.BillToCountry */, 33, 60);
+                    doc.text(this.BillToStreet3+ ' ' + this.BillToCity + ' ' + this.BillToZipPostalCode + ' ' + this.BillToCountry, 33, 67);
 
 
 
@@ -672,7 +693,7 @@ export default class FetchCustomerLedger extends LightningElement {
         // Add disclaimer text
         doc.setTextColor(255, 0, 0);
         doc.setFontSize(8);
-        doc.text('Disclaimer : Disclaimer at the end of the ledger for any clarification to contact.', 10, doc.internal.pageSize.getHeight() - 40);
+        doc.text(this.Disclaimer, 10, doc.internal.pageSize.getHeight() - 40);
         doc.setTextColor(0, 0, 0); 
     }
 
