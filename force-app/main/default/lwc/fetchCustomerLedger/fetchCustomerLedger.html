@@ -134,7 +134,7 @@
                 
                 <!-- record for the account  -->
                 <div class="slds-p-around_medium">       
-                    <lightning-input label="TO" type="text" onchange={handleToAddress} required></lightning-input>
+                    <lightning-input label="TO" value={emails} type="text" onchange={handleToAddress} required></lightning-input>
                     <lightning-input label="CC" type="text" onchange={handleCCAddress}></lightning-input>
                     <lightning-input-rich-text class="slds-p-top_small" 
                     value={getEma}
@@ -147,7 +147,7 @@
                 accept={acceptedFormats}
                 record-id={recordId}
                 onuploadfinished={handleUploadFinished}
-                multiple required
+                multiple 
                 >
             </lightning-file-upload>
             <template if:true={uploadedFileNames}>

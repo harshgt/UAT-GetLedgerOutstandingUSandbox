@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BPUpdateURL2__c</fullName>
+    <description>URL for updating BP of SAP side from Salesforce for special fields : PAN no, TAN no, Pricing &amp; Customer Statistics Group</description>
+    <externalId>false</externalId>
+    <label>BPUpdateURL2</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Url</type>
+</CustomField>
