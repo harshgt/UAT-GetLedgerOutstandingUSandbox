@@ -18,15 +18,15 @@ public class FirstLeadQueue implements Queueable, Database.AllowsCallouts{
             Authorization__c customSetting  = Authorization__c.getInstance();
             String Username = customSetting.Username__c;
             String Password = customSetting.Password__c;
-
-			String BPCreationURL = customSetting.BPCreationURL__c ;
+            
+            String BPCreationURL = customSetting.BPCreationURL__c ;
             
             Http http = new Http();
             HttpRequest req = new HttpRequest();
             req.setEndpoint(BPCreationURL);
             req.setMethod('POST');
             
-                     
+            
             Blob headerValue = Blob.valueOf(Username + ':' + Password);        
             String authorizationHeader = 'Basic' + EncodingUtil.base64Encode(headerValue);
             
@@ -84,7 +84,7 @@ public class FirstLeadQueue implements Queueable, Database.AllowsCallouts{
                                     System.debug(CustomerId);
                                     
                                 }else {
-                                    System.debug('Node3 is incorrect');
+                                    
                                     for(Dom.XmlNode node4 : node3.getChildElements()){
                                         System.debug(node4.getText());
                                     }
@@ -115,26 +115,76 @@ public class FirstLeadQueue implements Queueable, Database.AllowsCallouts{
                     }
                     
                     
-                } else {
+                } else {              // if status code not 201
                     
-                    
-                    String errorMessage;
+                    List<String> errorMessage = new List<String>();
                     if (res.getBody() != null){
+                        
                         Dom.Document doc1 = new Dom.Document();
                         
+                        
                         doc1.load(res.getBody());
+                        
                         Dom.XmlNode rootNode = doc1.getRootElement();
+                        
                         for (Dom.XmlNode childNode : rootNode.getChildElements()) {
                             if (childNode.getName() == 'message') {
-                                errorMessage = childNode.getText();
-                                system.debug('Error Message: '+ errorMessage);
+                                errorMessage.add(childNode.getText());
+                                //system.debug('Error Message: '+ errorMessage);
                                 
+                            } 
+                            else if(childNode.getName() == 'innererror'){
+                                
+                                //System.debug('innererror');
+                                for(Dom.XmlNode errorDetailsNode : childNode.getChildElements()){
+                                    if(errorDetailsNode.getName() == 'errordetails'){
+                                    	
+                                        //System.debug('errordetails');
+                                        for(Dom.XmlNode errordetailNode : errorDetailsNode.getChildElements()){
+                                            if(errordetailNode.getName() == 'errordetail'){
+                                                
+                                                //System.debug('errordetail');
+                                                for(Dom.XmlNode messageNode : errordetailNode.getChildElements()){
+                                                    if(messageNode.getName() == 'message'){
+                                                        errorMessage.add(messageNode.getText());
+                                                        //System.debug('Error Message: '+errorMessage);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
-                        System.debug(errorMessage);
+                        
+                        /*for (Dom.XmlNode childNode : rootNode.getChildElements()) {
+
+if (childNode.getName() == 'message') {
+errorMessage1 = childNode.getText();
+//  errorMessage.add(childNode.getText());
+system.debug('Error Message1: '+ errorMessage1);
+
+} else if(childNode.getName() == 'innererror'){
+Dom.XmlNode errorDetailsNode = childNode.getChildElements();
+if (errorDetailsNode.getName() == 'errordetail' ) {
+System.debug('errorDetailsNode is not null');
+Dom.XmlNode errorDetailNode = errorDetailsNode.getChildElements();
+if (errorDetailNode.getName() == 'message') {
+System.debug('errorDetailNode is not null');
+errorMessage2 = errorDetailNode.getText();
+System.debug('Error Message2: '+ errorMessage2);
+}
+} 
+}
+
+}*/
+                        
+                        //errorMessage = errorMessage1 + ';' + errorMessage2;
+                        System.debug(String.join(ErrorMessage, '; '));
                         RevertStatus(leads.Id, errorMessage);
                         
                     } else {
+                        System.debug('Response is null');
                         errorMessage = null;
                         RevertStatus(leads.Id, errorMessage);
                     }
@@ -175,7 +225,7 @@ public class FirstLeadQueue implements Queueable, Database.AllowsCallouts{
         
     }
     
-    public static String RevertStatus(Id recordId, String ErrorMessage){
+    public static String RevertStatus(Id recordId, List<String> ErrorMessage){
         
         //List<Lead> leadsToUpdate = new List<Lead>();
         
@@ -183,8 +233,12 @@ public class FirstLeadQueue implements Queueable, Database.AllowsCallouts{
         
         
         LeadList.Status = 'Check Customer Details';
-        LeadList.Error_Response__c = ErrorMessage;
-        //leadsToUpdate.add(leads);      
+        if(ErrorMessage != null){
+            LeadList.Error_Response__c = String.join(ErrorMessage, '; '); 
+            //leadsToUpdate.add(leads);
+        } else {
+            LeadList.Error_Response__c = 'no response from error or record is created in SAP but error during transaction';
+        }      
         
         
         

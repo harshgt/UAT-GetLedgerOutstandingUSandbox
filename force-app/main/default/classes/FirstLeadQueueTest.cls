@@ -278,7 +278,7 @@ insert testLead;
         if (Test.isRunningTest()) {
             // Insert custom setting only during test
             insert authSettings;
-        }  
+        }
         System.enqueueJob(new FirstLeadQueue(new List<Lead>{testLead}));
         Test.stopTest();
         
@@ -551,9 +551,10 @@ insert testContact;
         if (Test.isRunningTest()) {
             // Insert custom setting only during test
             insert authSettings;
-        }  
+        }
+        List<String> LisStr = new List<String>{'Error Message'};
         // Call the RevertStatus method
-        FirstLeadQueue.RevertStatus(testLead.Id, 'Error message');
+        FirstLeadQueue.RevertStatus(testLead.Id, LisStr);
         
         // Stop test
         Test.stopTest();
@@ -675,5 +676,7 @@ insert testContact;
     }
     
     // ... Additional test methods ...
+    
+   
     
 }

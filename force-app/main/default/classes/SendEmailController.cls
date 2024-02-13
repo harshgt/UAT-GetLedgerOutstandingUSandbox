@@ -61,18 +61,18 @@ public with sharing class SendEmailController {
         
 
 
-        
+        String Disclaimers = '<span style="color: red;">Disclaimer: For any queries please contact on collections@brilliantpolymers.com</span>';
         if(CustCodeEmail == 'oustanding'){
             mail.setSubject(CustomerName+ ' - Overdue reminder-'+formattedDate);
-            String Disclaimers = '<span style="color: red;">Disclaimer : Disclaimer at the end of the oustanding for any clarification, please contact us.</span>';
+            //String Disclaimers = '<span style="color: red;">Disclaimer: For any queries please contact on collections@brilliantpolymers.com</span>';
         	
-            mail.setHtmlBody('Dear Valued Customer, <br/><br/> Please find the below overdue as of today. You are requested to release the same at the earliest.<br/>' + BodyEmail + ' <p><br/> Regards,<br/>'+ requestCurrentUser.Name +'<br/>' +titlePart + companyPart +' <br/><br/><br/> '+ Disclaimers +'</p>'  );
+            mail.setHtmlBody('Dear Valued Customer, <br/><br/> Please find the below overdue payments as on date for your reference. You are requested to release the same at the earliest.<br/><br/>' + BodyEmail + ' <p><br/>' + Disclaimers + '<br/><br/> Regards,<br/>'+ requestCurrentUser.Name +'<br/>' +titlePart + companyPart +' <br/>'  );
         }
         else if(CustCodeEmail == 'ledger'){
             mail.setSubject('Showing ledger...! ');
-            String Disclaimers1 = '<span style="color: red;">Disclaimer : Disclaimer at the end of the ledger for any clarification, please contact us.</span>';
+            //String Disclaimers1 = '<span style="color: red;">Disclaimer : Disclaimer at the end of the ledger for any clarification, please contact us.</span>';
         
-            mail.setHtmlBody('Dear Sir,  <br/><br/>' + BodyEmail + ' <p>thank You!<br/> <br/> Regards,<br/>'+ requestCurrentUser.Name +' <br/><br/><br/><br/> '+ Disclaimers1 +'</p>'  );
+            mail.setHtmlBody('Dear Sir,  <br/><br/>' + BodyEmail + ' <p>thank You!<br/><p><br/>' + Disclaimers + ' <br/> <br/> Regards,<br/>'+ requestCurrentUser.Name +' <br/></p>');
         } 
         
         
